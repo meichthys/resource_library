@@ -1,0 +1,296 @@
+{% extends "templates/web.html" %}
+
+{% block page_content %}
+<div class="resource-page">
+	<div class="resource-container mx-auto">
+
+		<a href="/resources" class="back-link">
+			<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+			All Resources
+		</a>
+
+		<div class="resource-card">
+
+			<!-- Icon -->
+			{% if icon %}
+			<img src="{{ icon }}" alt="{{ title }}" class="app-icon">
+			{% else %}
+			<div class="app-icon app-icon-placeholder">
+				{{ title[0] | upper }}
+			</div>
+			{% endif %}
+
+			<!-- Category breadcrumb -->
+			{% if category_path %}
+			<div class="category-path">
+				{% for part in category_path %}
+				{% if not loop.first %}
+				<span class="cat-sep">›</span>
+				{% endif %}
+				<span class="cat-part {% if loop.last %}cat-leaf{% endif %}" data-category="{{ part }}">{{ part }}</span>
+				{% endfor %}
+			</div>
+			{% endif %}
+
+			<!-- Title -->
+			<h1 class="app-title">{{ title }}</h1>
+
+			<!-- Description -->
+			<div class="app-description">{{ description | safe }}</div>
+
+			<!-- Actions -->
+			{% if app_store_url or website or source_code_repository %}
+			<div class="app-actions">
+				{% if app_store_url %}
+				<a href="{{ app_store_url }}" class="action-btn btn-get-app" target="_blank" rel="noopener noreferrer">
+					<!-- Download/store icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+					Get App
+				</a>
+				{% endif %}
+				{% if website %}
+				<a href="{{ website }}" class="action-btn btn-website" target="_blank" rel="noopener noreferrer">
+					<!-- Globe icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+					Website
+				</a>
+				{% endif %}
+				{% if source_code_repository %}
+				<a href="{{ source_code_repository }}" class="action-btn btn-source-code" target="_blank" rel="noopener noreferrer">
+					<!-- GitHub icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+					Source Code
+				</a>
+				{% endif %}
+			</div>
+			{% endif %}
+
+		</div>
+	</div>
+</div>
+
+<style>
+.back-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-muted, #64748b);
+	text-decoration: none;
+	margin-bottom: 1.25rem;
+	transition: color 0.15s;
+}
+
+.back-link svg {
+	width: 1em;
+	height: 1em;
+}
+
+.back-link:hover {
+	color: #4f46e5;
+	text-decoration: none;
+}
+
+.resource-page {
+	padding: 3rem 1rem;
+}
+
+.resource-container {
+	max-width: 680px;
+}
+
+.resource-card {
+	background: var(--card-bg, #fff);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: 20px;
+	padding: 3rem 2.5rem;
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.07);
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+/* Icon */
+.app-icon {
+	width: 100px;
+	height: 100px;
+	min-width: 100px;
+	border-radius: 22%;
+	object-fit: cover;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+	margin-bottom: 1.25rem;
+}
+
+.app-icon-placeholder {
+	background: linear-gradient(135deg, #667eea, #764ba2);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 44px;
+	font-weight: 700;
+	color: white;
+}
+
+/* Category breadcrumb */
+.category-path {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 4px;
+	margin-bottom: 0.75rem;
+}
+
+.cat-sep {
+	color: #9ca3af;
+	font-size: 0.85rem;
+	line-height: 1;
+}
+
+.cat-part {
+	font-size: 0.78rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: #9ca3af;
+}
+
+.cat-leaf {
+	display: inline-block;
+	padding: 3px 10px;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	background: #ede9fe;
+	color: #6d28d9;
+}
+
+/* Title */
+.app-title {
+	font-size: 1.9rem;
+	font-weight: 700;
+	color: var(--heading-color, #1a202c);
+	line-height: 1.2;
+	margin: 0 0 0.75rem 0;
+}
+
+/* Description (rich text) */
+.app-description {
+	color: var(--text-muted, #64748b);
+	font-size: 1rem;
+	line-height: 1.7;
+	max-width: 520px;
+	margin: 0 0 1.75rem 0;
+	text-align: left;
+}
+
+/* Action buttons */
+.app-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: center;
+}
+
+.action-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1.75rem;
+	border-radius: 10px;
+	font-size: 1rem;
+	font-weight: 600;
+	text-decoration: none;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+	border: none;
+}
+
+.action-btn svg {
+	width: 1.1em;
+	height: 1.1em;
+	flex-shrink: 0;
+}
+
+.btn-get-app {
+	background: #4f46e5;
+	color: #fff;
+}
+.btn-get-app:hover {
+	background: #4338ca;
+	color: #fff;
+	text-decoration: none;
+}
+
+.btn-website {
+	background: #0d9488;
+	color: #fff;
+}
+.btn-website:hover {
+	background: #0f766e;
+	color: #fff;
+	text-decoration: none;
+}
+
+.btn-source-code {
+	background: #1f2937;
+	color: #fff;
+}
+.btn-source-code:hover {
+	background: #111827;
+	color: #fff;
+	text-decoration: none;
+}
+
+@media (max-width: 576px) {
+	.resource-card {
+		padding: 2rem 1.25rem;
+	}
+
+	.app-icon {
+		width: 80px;
+		height: 80px;
+		min-width: 80px;
+	}
+
+	.app-icon-placeholder {
+		font-size: 36px;
+	}
+
+	.app-title {
+		font-size: 1.5rem;
+	}
+
+	.action-btn {
+		width: 100%;
+	}
+}
+</style>
+
+<script>
+(function () {
+	var palettes = [
+		{ bg: "#dbeafe", color: "#1d4ed8" },
+		{ bg: "#d1fae5", color: "#065f46" },
+		{ bg: "#fef3c7", color: "#92400e" },
+		{ bg: "#fce7f3", color: "#9d174d" },
+		{ bg: "#ede9fe", color: "#6d28d9" },
+		{ bg: "#ffedd5", color: "#9a3412" },
+		{ bg: "#e0f2fe", color: "#0369a1" },
+		{ bg: "#f0fdf4", color: "#166534" },
+	];
+
+	var leaf = document.querySelector(".cat-leaf");
+	if (leaf) {
+		var name = leaf.dataset.category || "";
+		var hash = Array.from(name).reduce(function (acc, ch) { return acc + ch.charCodeAt(0); }, 0);
+		var p = palettes[hash % palettes.length];
+		leaf.style.background = p.bg;
+		leaf.style.color = p.color;
+	}
+})();
+</script>
+{% endblock %}

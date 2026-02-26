@@ -1,0 +1,164 @@
+{
+ "actions": [],
+ "allow_guest_to_view": 1,
+ "allow_rename": 1,
+ "autoname": "field:title",
+ "creation": "2026-02-25 21:27:45.308988",
+ "description": "A resource that is freely given",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "description",
+  "category",
+  "column_break_mopm",
+  "website",
+  "icon",
+  "route",
+  "published",
+  "software_details_section",
+  "source_code_repository",
+  "app_store_url",
+  "section_break_ngzd",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ngzd",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Resource",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "Description",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Category",
+   "options": "Category",
+   "reqd": 1
+  },
+  {
+   "fieldname": "source_code_repository",
+   "fieldtype": "Data",
+   "label": "Source Code Repository",
+   "options": "URL",
+   "reqd": 1
+  },
+  {
+   "fieldname": "website",
+   "fieldtype": "Data",
+   "label": "Website",
+   "options": "URL"
+  },
+  {
+   "depends_on": "eval: doc.category==\"Software\"",
+   "fieldname": "software_details_section",
+   "fieldtype": "Section Break",
+   "label": "Software Details"
+  },
+  {
+   "fieldname": "app_store_url",
+   "fieldtype": "Data",
+   "label": "App Store URL",
+   "options": "URL"
+  },
+  {
+   "fieldname": "column_break_mopm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "published",
+   "fieldtype": "Check",
+   "label": "Published",
+   "permlevel": 1
+  },
+  {
+   "description": "This is the app's unique web identifier used in the full app's url",
+   "fieldname": "route",
+   "fieldtype": "Data",
+   "label": "Website Slug",
+   "read_only": 1
+  },
+  {
+   "description": "Recommended size: 512x512",
+   "fieldname": "icon",
+   "fieldtype": "Attach Image",
+   "label": "Icon"
+  }
+ ],
+ "grid_page_length": 50,
+ "has_web_view": 1,
+ "image_field": "icon",
+ "index_web_pages_for_search": 1,
+ "is_published_field": "published",
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-25 22:56:59.798011",
+ "modified_by": "Administrator",
+ "module": "Resource Library",
+ "name": "Resource",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "route": "title",
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "title, category, published",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_seen": 1,
+ "track_views": 1,
+ "website_search_field": "title"
+}
