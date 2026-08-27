@@ -1,9 +1,9 @@
 {
  "allow_comments": 0,
- "allow_delete": 0,
- "allow_edit": 0,
+ "allow_delete": 1,
+ "allow_edit": 1,
  "allow_incomplete": 0,
- "allow_multiple": 0,
+ "allow_multiple": 1,
  "allow_print": 0,
  "anonymous": 0,
  "apply_document_permissions": 0,
@@ -15,10 +15,23 @@
  "idx": 0,
  "introduction_text": "<p>Fill in the details below to submit a resource for review. Once approved, it will appear in the library.</p>",
  "is_standard": 1,
- "list_columns": [],
- "login_required": 0,
+ "list_columns": [
+  {
+   "fieldname": "title",
+   "label": "Title"
+  },
+  {
+   "fieldname": "category",
+   "label": "Category"
+  },
+  {
+   "fieldname": "published",
+   "label": "Published"
+  }
+ ],
+ "login_required": 1,
  "max_attachment_size": 0,
- "modified": "2026-02-25 23:44:29.071426",
+ "modified": "2026-08-27 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Submit Resource",
@@ -26,7 +39,7 @@
  "published": 1,
  "route": "submit-resource",
  "show_attachments": 0,
- "show_list": 0,
+ "show_list": 1,
  "show_sidebar": 0,
  "success_message": "Thank you! Your resource has been submitted and is pending review.",
  "title": "Submit a Resource",

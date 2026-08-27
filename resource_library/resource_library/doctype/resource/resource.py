@@ -13,3 +13,6 @@ class Resource(WebsiteGenerator):
 			context.category_path = [*ancestors, self.category]
 		else:
 			context.category_path = []
+
+		context.can_edit = frappe.session.user != "Guest" and self.has_permission("write")
+		context.edit_url = f"/submit-resource/{self.name}"

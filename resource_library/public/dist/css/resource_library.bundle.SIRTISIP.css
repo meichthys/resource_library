@@ -1,0 +1,266 @@
+/* ../../../../tmp/tmp-54884-E4F7SzLNdKJP/resource_library/resource_library/public/css/resource_library.bundle.css */
+:root {
+  --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
+  --rl-text: #ffffff;
+  --rl-text-muted: rgba(255, 255, 255, 0.75);
+  --rl-glass-bg: rgba(255, 255, 255, 0.08);
+  --rl-glass-bg-strong: rgba(255, 255, 255, 0.14);
+  --rl-glass-border: rgba(255, 255, 255, 0.22);
+  --rl-glass-border-strong: rgba(255, 255, 255, 0.4);
+  --rl-accent-grad: linear-gradient(135deg, #14b8a6 0%, #2563eb 100%);
+  --rl-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  --rl-font:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Inter,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  --rl-bg: #1e1b4b;
+  --rl-bg-elevated: var(--rl-glass-bg);
+  --rl-border: var(--rl-glass-border);
+  --rl-border-strong: var(--rl-glass-border-strong);
+  --rl-surface-hover: var(--rl-glass-bg-strong);
+  --bg-color: #1e1b4b;
+  --fg-color: var(--rl-glass-bg);
+  --card-bg: var(--rl-glass-bg);
+  --subtle-accent: var(--rl-glass-bg);
+  --subtle-fg: var(--rl-glass-bg-strong);
+  --fg-hover-color: var(--rl-glass-bg-strong);
+  --control-bg: rgba(255, 255, 255, 0.07);
+  --control-bg-on-gray: rgba(255, 255, 255, 0.1);
+  --disabled-control-bg: rgba(255, 255, 255, 0.04);
+  --modal-bg: #211a4a;
+  --toast-bg: #211a4a;
+  --popover-bg: #211a4a;
+  --awesomebar-focus-bg: var(--control-bg);
+  --text-color: var(--rl-text);
+  --heading-color: var(--rl-text);
+  --text-muted: var(--rl-text-muted);
+  --disabled-text-color: rgba(255, 255, 255, 0.4);
+  --placeholder-color: rgba(255, 255, 255, 0.5);
+  --icon-stroke: var(--rl-text-muted);
+  --border-color: var(--rl-glass-border);
+  --dark-border-color: var(--rl-glass-border-strong);
+  --table-border-color: var(--rl-glass-border);
+  --btn-default-bg: var(--rl-glass-bg);
+  --btn-default-hover-bg: var(--rl-glass-bg-strong);
+  --btn-ghost-hover-bg: var(--rl-glass-bg-strong);
+  --btn-primary: var(--rl-text);
+}
+html,
+body {
+  background: var(--rl-grad) !important;
+  background-attachment: fixed !important;
+  color: var(--rl-text) !important;
+  font-family: var(--rl-font);
+  min-height: 100vh;
+}
+a {
+  color: var(--rl-text);
+}
+a:hover {
+  color: var(--rl-text);
+}
+hr {
+  border-color: var(--rl-glass-border);
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--rl-text);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+.navbar,
+.navbar.navbar-light {
+  background: transparent !important;
+  border-bottom: 1px solid var(--rl-glass-border);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+.navbar.navbar-light .navbar-brand,
+.navbar.navbar-light .nav-link {
+  color: var(--rl-text) !important;
+}
+.navbar.navbar-light .nav-link:hover {
+  color: var(--rl-text-muted) !important;
+}
+.page-footer,
+.web-footer,
+.web-footer .footer-logo-extension {
+  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--rl-glass-border);
+  color: var(--rl-text-muted);
+}
+.page-footer a,
+.web-footer a {
+  color: var(--rl-text-muted);
+}
+.card,
+.box-container .box,
+.web-form-wrapper .box {
+  background: var(--rl-glass-bg);
+  border: 1px solid var(--rl-glass-border);
+  border-radius: 16px;
+  color: var(--rl-text);
+  box-shadow: var(--rl-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.web-form-container {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.web-form-wrapper,
+.web-form-header,
+.web-form-body,
+.box-container,
+.box-area,
+.box-label {
+  background: transparent;
+  color: var(--rl-text);
+}
+.web-form-title,
+.web-form-introduction {
+  color: var(--rl-text) !important;
+}
+.form-control {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--rl-glass-border);
+  color: var(--rl-text);
+}
+.form-control:focus {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--rl-glass-border-strong);
+  color: var(--rl-text);
+  box-shadow: none;
+}
+.form-control::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+.ql-toolbar.ql-snow {
+  background-color: var(--rl-glass-bg-strong);
+  border-color: var(--rl-glass-border);
+}
+.ql-container.ql-snow {
+  background-color: var(--rl-glass-bg);
+  border-color: var(--rl-glass-border);
+}
+.ql-snow .ql-picker-options {
+  background-color: #1e1b4b;
+  border-color: var(--rl-glass-border) !important;
+}
+.ql-snow .ql-picker-label::before,
+.ql-snow .ql-picker-item {
+  color: var(--rl-text);
+}
+.ql-snow .ql-fill,
+.ql-snow .ql-stroke.ql-fill {
+  fill: var(--rl-text-muted);
+}
+.ql-editor.ql-blank::before {
+  color: rgba(255, 255, 255, 0.5);
+}
+label,
+.control-label,
+.box-label,
+.text-muted {
+  color: var(--rl-text-muted) !important;
+}
+.btn-primary,
+.web-form-actions .btn-primary {
+  background: var(--rl-accent-grad);
+  border: none;
+  color: #fff;
+  box-shadow: 0 4px 18px rgba(20, 184, 166, 0.35);
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+  color: #fff;
+}
+.btn-default,
+.btn-secondary,
+.discard-btn {
+  background: var(--rl-glass-bg);
+  border: 1px solid var(--rl-glass-border-strong);
+  color: var(--rl-text);
+}
+.btn-default:hover,
+.btn-secondary:hover,
+.discard-btn:hover {
+  background: var(--rl-glass-bg-strong);
+  color: var(--rl-text);
+}
+.modal-content,
+.msgprint-dialog .modal-content {
+  background-color: #211a4a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+}
+.modal-header,
+.modal-footer {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: transparent !important;
+}
+.modal-title,
+.modal-body,
+.modal-body .msgprint {
+  color: #ffffff !important;
+}
+.modal .btn-modal-close,
+.modal .close,
+.modal .btn-close {
+  color: var(--rl-text);
+  opacity: 0.8;
+}
+.modal .btn-modal-close:hover,
+.modal .close:hover,
+.modal .btn-close:hover {
+  opacity: 1;
+}
+.dropdown-menu {
+  background-color: var(--rl-bg);
+  border: 1px solid var(--rl-glass-border);
+  color: var(--rl-text);
+}
+.dropdown-item {
+  color: var(--rl-text);
+}
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background-color: var(--rl-glass-bg-strong);
+  color: var(--rl-text);
+}
+.popover {
+  background-color: var(--rl-bg);
+  border: 1px solid var(--rl-glass-border);
+}
+.popover-header {
+  background-color: var(--rl-glass-bg-strong);
+  color: var(--rl-text);
+  border-color: var(--rl-glass-border);
+}
+.popover-body {
+  color: var(--rl-text-muted);
+}
+.bs-popover-top > .arrow::after,
+.bs-popover-bottom > .arrow::after {
+  border-top-color: var(--rl-bg);
+  border-bottom-color: var(--rl-bg);
+}
+.tooltip-inner {
+  background-color: var(--rl-bg);
+  color: var(--rl-text);
+}
+/*# sourceMappingURL=resource_library.bundle.SIRTISIP.css.map */

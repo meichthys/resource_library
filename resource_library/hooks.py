@@ -11,15 +11,14 @@ app_license = "mit"
 # required_apps = []
 
 # Each item in the list will be shown as an app in the apps page
-# add_to_apps_screen = [
-# 	{
-# 		"name": "resource_library",
-# 		"logo": "/assets/resource_library/logo.png",
-# 		"title": "Resource Library",
-# 		"route": "/resource_library",
-# 		"has_permission": "resource_library.api.permission.has_app_permission"
-# 	}
-# ]
+add_to_apps_screen = [
+	{
+		"name": "resource_library",
+		"logo": "/assets/resource_library/resource_library-logo.svg",
+		"title": "Resource Library",
+		"route": "/desk/resource-library",
+	}
+]
 
 # Includes in <head>
 # ------------------
@@ -29,7 +28,11 @@ app_license = "mit"
 # app_include_js = "/assets/resource_library/js/resource_library.js"
 
 # include js, css files in header of web template
-# web_include_css = "/assets/resource_library/css/resource_library.css"
+# Note: must contain ".bundle." and NOT start with "/assets" for Frappe to
+# resolve it through the hashed assets.json manifest (see bundled_asset() in
+# frappe/utils/jinja_globals.py) — otherwise it's served with a 1-year
+# Cache-Control and browsers never pick up changes.
+web_include_css = "resource_library.bundle.css"
 # web_include_js = "/assets/resource_library/js/resource_library.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -83,7 +86,7 @@ home_page = "resources"
 # ------------
 
 # before_install = "resource_library.install.before_install"
-# after_install = "resource_library.install.after_install"
+after_install = "resource_library.install.after_install"
 
 # Uninstallation
 # ------------
