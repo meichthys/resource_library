@@ -108,12 +108,16 @@ h1, h2, h3, h4, h5, h6 {
 .web-footer .footer-logo-extension {
 	background: rgba(0, 0, 0, 0.15);
 	border-top: 1px solid var(--rl-glass-border);
-	color: var(--rl-text-muted);
+	color: var(--rl-text);
 }
 
 .page-footer a,
 .web-footer a {
-	color: var(--rl-text-muted);
+	color: var(--rl-text);
+}
+
+.web-footer .footer-powered {
+	color: var(--rl-text);
 }
 
 /* Glass panel surfaces (generic cards) */

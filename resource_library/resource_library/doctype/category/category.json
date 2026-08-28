@@ -47,8 +47,11 @@
   {
    "fieldname": "old_parent",
    "fieldtype": "Link",
+   "hidden": 1,
    "label": "Old Parent",
-   "options": "Category"
+   "no_copy": 1,
+   "options": "Category",
+   "read_only": 1
   },
   {
    "fieldname": "parent_category",

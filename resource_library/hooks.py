@@ -20,6 +20,13 @@ add_to_apps_screen = [
 	}
 ]
 
+# Fixtures
+# ------------------
+
+fixtures = [
+	{"doctype": "Category", "filters": [["category", "=", "Software"]]},
+]
+
 # Includes in <head>
 # ------------------
 
@@ -61,6 +68,9 @@ web_include_css = "resource_library.bundle.css"
 
 # application home page (will override Website Settings)
 home_page = "resources"
+
+# navbar brand label (defaults to "Home" if unset)
+brand_html = "Freely Given Resources"
 
 # website user home page (by Role)
 # role_home_page = {

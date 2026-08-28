@@ -1,4 +1,4 @@
-/* ../../../../tmp/tmp-54884-E4F7SzLNdKJP/resource_library/resource_library/public/css/resource_library.bundle.css */
+/* ../../../../tmp/tmp-952058-JyvlrFJRpcBb/resource_library/resource_library/public/css/resource_library.bundle.css */
 :root {
   --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
   --rl-text: #ffffff;
@@ -95,11 +95,14 @@ h6 {
 .web-footer .footer-logo-extension {
   background: rgba(0, 0, 0, 0.15);
   border-top: 1px solid var(--rl-glass-border);
-  color: var(--rl-text-muted);
+  color: var(--rl-text);
 }
 .page-footer a,
 .web-footer a {
-  color: var(--rl-text-muted);
+  color: var(--rl-text);
+}
+.web-footer .footer-powered {
+  color: var(--rl-text);
 }
 .card,
 .box-container .box,
@@ -263,4 +266,4 @@ label,
   background-color: var(--rl-bg);
   color: var(--rl-text);
 }
-/*# sourceMappingURL=resource_library.bundle.SIRTISIP.css.map */
+/*# sourceMappingURL=resource_library.bundle.QBJFQTOM.css.map */

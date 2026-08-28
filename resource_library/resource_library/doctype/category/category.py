@@ -1,9 +1,8 @@
 # Copyright (c) 2026, Meichthys and contributors
 # For license information, please see license.txt
 
-# import frappe
-from frappe.model.document import Document
+from frappe.utils.nestedset import NestedSet
 
 
-class Category(Document):
-	pass
+class Category(NestedSet):
+	nsm_parent_field = "parent_category"

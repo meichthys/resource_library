@@ -61,11 +61,11 @@
    "reqd": 1
   },
   {
+   "description": "Required for Software (and its subcategories)",
    "fieldname": "source_code_repository",
    "fieldtype": "Data",
    "label": "Source Code Repository",
-   "options": "URL",
-   "reqd": 1
+   "options": "URL"
   },
   {
    "fieldname": "website",
@@ -74,7 +74,6 @@
    "options": "URL"
   },
   {
-   "depends_on": "eval: doc.category==\"Software\"",
    "fieldname": "software_details_section",
    "fieldtype": "Section Break",
    "label": "Software Details"
@@ -159,6 +158,10 @@
    "role": "All",
    "share": 1,
    "write": 1
+  },
+  {
+   "read": 1,
+   "role": "All"
   }
  ],
  "route": "title",
