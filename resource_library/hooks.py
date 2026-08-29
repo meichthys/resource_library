@@ -37,9 +37,10 @@ fixtures = [
 # include js, css files in header of web template
 # Note: must contain ".bundle." and NOT start with "/assets" for Frappe to
 # resolve it through the hashed assets.json manifest (see bundled_asset() in
-# frappe/utils/jinja_globals.py) — otherwise it's served with a 1-year
+# frappe/utils/jinja_globals.py), otherwise it's served with a 1-year
 # Cache-Control and browsers never pick up changes.
 web_include_css = "resource_library.bundle.css"
+web_include_js = "resource_card.bundle.js"
 # web_include_js = "/assets/resource_library/js/resource_library.js"
 
 # include custom scss in every website theme (without file extension ".scss")
@@ -71,6 +72,9 @@ home_page = "resources"
 
 # navbar brand label (defaults to "Home" if unset)
 brand_html = "Freely Given Resources"
+
+# Serves the per-resource embed badge at /badge/<theme>/<resource>.svg
+page_renderer = ["resource_library.badge.BadgeRenderer"]
 
 # website user home page (by Role)
 # role_home_page = {

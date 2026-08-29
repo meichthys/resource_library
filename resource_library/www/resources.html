@@ -1,4 +1,5 @@
 {% extends "templates/web.html" %}
+{% from "templates/includes/resource_card.html" import resource_card %}
 
 {% block page_content %}
 <div class="resources-page">
@@ -30,6 +31,13 @@
 			{% for cat in option_pills %}
 			<a href="{{ cat.url }}" class="filter-pill" data-category="{{ cat.name }}">{{ cat.label }}</a>
 			{% endfor %}
+
+			{% if selected_tag %}
+			<a href="{{ clear_tag_url }}" class="filter-pill tag-pill active" title="Clear tag filter">
+				{{ selected_tag }}
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			</a>
+			{% endif %}
 		</div>
 		<div class="filter-bar-right">
 			<select class="sort-select" onchange="if (this.value) window.location.href = this.value;">
@@ -37,6 +45,10 @@
 				<option value="{{ opt.url }}" {% if opt.value == sort %}selected{% endif %}>Sort: {{ opt.label }}</option>
 				{% endfor %}
 			</select>
+			<a href="{{ recommended_toggle_url }}" class="filter-pill recommended-pill {% if recommended_only %}active{% endif %}">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{% if recommended_only %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+				Recommended
+			</a>
 			{% if is_logged_in %}
 			<a href="{{ favorites_toggle_url }}" class="filter-pill favorites-pill {% if favorites_only %}active{% endif %}">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{% if favorites_only %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -49,32 +61,9 @@
 
 	<!-- Grid -->
 	{% if resources %}
-	<div class="resources-grid" id="resources-grid">
+	<div class="resources-grid" id="resources-grid" {% if favorites_only %}data-favorites-view="1"{% endif %}>
 		{% for r in resources %}
-		<a href="/{{ r.route }}{% if selected_category %}?from_category={{ selected_category | urlencode }}{% endif %}" class="resource-card"
-			data-title="{{ r.title | lower }}"
-			data-category="{{ r.category | lower }}"
-			data-desc="{{ r.description | striptags | lower }}">
-
-			<span class="favorite-btn {% if is_logged_in %}interactive{% endif %} {% if r.is_favorited %}favorited{% endif %}" {% if is_logged_in %}data-resource="{{ r.name }}"{% endif %} title="{% if is_logged_in %}Favorite{% else %}{{ r.favorite_count }} favorite{% if r.favorite_count != 1 %}s{% endif %}{% endif %}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{% if r.is_favorited %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-				<span class="favorite-count">{{ r.favorite_count }}</span>
-			</span>
-
-			{% if r.icon %}
-			<img src="{{ r.icon }}" alt="{{ r.title }}" class="card-icon">
-			{% else %}
-			<div class="card-icon card-icon-placeholder">{{ r.title[0] | upper }}</div>
-			{% endif %}
-
-			<div class="card-body">
-				{% if r.category %}
-				<span class="card-cat" data-category="{{ r.category }}">{{ r.category }}</span>
-				{% endif %}
-				<div class="card-title">{{ r.title }}</div>
-				<div class="card-desc">{{ r.description | striptags | truncate(110) }}</div>
-			</div>
-		</a>
+		{{ resource_card(r, is_logged_in, selected_category) }}
 		{% endfor %}
 	</div>
 	{% endif %}
@@ -205,15 +194,23 @@
 	gap: 0.5rem;
 }
 
-.favorites-pill {
+.favorites-pill,
+.recommended-pill {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35rem;
 }
 
-.favorites-pill svg {
+.favorites-pill svg,
+.recommended-pill svg {
 	width: 0.9em;
 	height: 0.9em;
+}
+
+.recommended-pill.active {
+	background: rgba(212, 169, 92, 0.92);
+	border-color: rgba(212, 169, 92, 0.92);
+	color: #2e1f08;
 }
 
 .sort-select {
@@ -275,125 +272,6 @@
 	color: var(--rl-bg, #0a0a0a);
 }
 
-/* Grid */
-.resources-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-	gap: 1.25rem;
-}
-
-.resource-card {
-	position: relative;
-	display: flex;
-	align-items: flex-start;
-	gap: 1rem;
-	padding: 1.25rem;
-	background: var(--rl-bg-elevated, #141414);
-	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
-	border-radius: 14px;
-	text-decoration: none;
-	color: inherit;
-	transition: background 0.15s, border-color 0.15s;
-}
-
-.favorite-btn {
-	position: absolute;
-	top: 0.75rem;
-	right: 0.75rem;
-	display: flex;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 0.25rem 0.55rem;
-	border-radius: 999px;
-	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.08));
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-	font-size: 0.72rem;
-	font-weight: 600;
-	transition: background 0.15s, color 0.15s;
-}
-
-.favorite-btn svg {
-	width: 14px;
-	height: 14px;
-	flex-shrink: 0;
-}
-
-.favorite-btn.interactive {
-	cursor: pointer;
-}
-
-.favorite-btn.interactive:hover {
-	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.16));
-	color: var(--rl-text, #f5f5f5);
-}
-
-.favorite-btn.favorited {
-	color: #9f1239;
-}
-
-.resource-card:hover {
-	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.06));
-	border-color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
-	text-decoration: none;
-	color: inherit;
-}
-
-.card-icon {
-	width: 52px;
-	height: 52px;
-	min-width: 52px;
-	border-radius: 50%;
-	object-fit: cover;
-}
-
-.card-icon-placeholder {
-	border-radius: 50%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 22px;
-	font-weight: 700;
-	color: #fff;
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-}
-
-.card-body {
-	flex: 1;
-	min-width: 0;
-	padding-right: 3.25rem;
-}
-
-.card-cat {
-	display: inline-block;
-	padding: 2px 10px;
-	border-radius: 999px;
-	font-size: 0.7rem;
-	font-weight: 600;
-	color: #fff;
-	margin-bottom: 0.3rem;
-	white-space: nowrap;
-}
-
-.card-title {
-	font-size: 0.95rem;
-	font-weight: 600;
-	color: var(--rl-text, #f5f5f5);
-	margin-bottom: 0.3rem;
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-}
-
-.card-desc {
-	font-size: 0.8rem;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-	line-height: 1.5;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-}
-
 /* No results */
 .no-results {
 	text-align: center;
@@ -420,31 +298,9 @@
 
 <script>
 (function () {
-	/* Gradient-colour category badges + icon bubbles */
-	var gradients = [
-		"linear-gradient(135deg, #7c3aed, #4f46e5)",
-		"linear-gradient(135deg, #0d9488, #059669)",
-		"linear-gradient(135deg, #db2777, #e11d48)",
-		"linear-gradient(135deg, #ca8a04, #a16207)",
-		"linear-gradient(135deg, #2563eb, #0891b2)",
-		"linear-gradient(135deg, #ea580c, #dc2626)",
-		"linear-gradient(135deg, #9333ea, #c026d3)",
-		"linear-gradient(135deg, #64748b, #334155)",
-	];
-
-	function hashGradient(name) {
-		var h = Array.from(name || "").reduce(function (a, c) { return a + c.charCodeAt(0); }, 0);
-		return gradients[h % gradients.length];
-	}
-
-	document.querySelectorAll(".card-cat").forEach(function (el) {
-		el.style.background = hashGradient(el.dataset.category || el.textContent.trim());
-	});
-
-	document.querySelectorAll(".card-icon-placeholder").forEach(function (el) {
-		var card = el.closest(".resource-card");
-		el.style.background = hashGradient(card ? card.dataset.category : "");
-	});
+	/* Card gradients, tag chips and favourite toggles live in
+	   resource_card.bundle.js so they also apply to Similar Resources on the
+	   detail page. Only the listing-specific search stays here. */
 
 	/* Client-side search */
 	var input = document.getElementById("resource-search");
@@ -470,39 +326,6 @@
 		});
 
 		if (noResults) noResults.style.display = visible === 0 ? "" : "none";
-	});
-
-	/* Favorite toggle (logged-in users only — button only renders as .interactive for them) */
-	var inFavoritesView = {{ "true" if favorites_only else "false" }};
-
-	document.querySelectorAll(".favorite-btn.interactive").forEach(function (btn) {
-		btn.addEventListener("click", function (e) {
-			e.preventDefault();
-			e.stopPropagation();
-
-			var wasFavorited = btn.classList.contains("favorited");
-			var countEl = btn.querySelector(".favorite-count");
-			var count = parseInt(countEl.textContent, 10) || 0;
-
-			frappe.call({
-				method: "frappe.desk.like.toggle_like",
-				args: {
-					doctype: "Resource",
-					name: btn.dataset.resource,
-					add: wasFavorited ? "No" : "Yes",
-				},
-				callback: function () {
-					btn.classList.toggle("favorited", !wasFavorited);
-					btn.querySelector("svg").setAttribute("fill", wasFavorited ? "none" : "currentColor");
-					countEl.textContent = wasFavorited ? Math.max(0, count - 1) : count + 1;
-
-					if (inFavoritesView && wasFavorited) {
-						var card = btn.closest(".resource-card");
-						if (card) card.remove();
-					}
-				},
-			});
-		});
 	});
 }());
 </script>

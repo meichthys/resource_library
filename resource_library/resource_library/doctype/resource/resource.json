@@ -2,7 +2,7 @@
  "actions": [],
  "allow_guest_to_view": 1,
  "allow_rename": 1,
- "autoname": "field:title",
+ "autoname": "hash",
  "creation": "2026-02-25 21:27:45.308988",
  "description": "A resource that is freely given",
  "doctype": "DocType",
@@ -10,12 +10,15 @@
  "field_order": [
   "title",
   "description",
-  "category",
-  "column_break_mopm",
-  "website",
   "icon",
+  "column_break_mopm",
+  "category",
+  "tags",
+  "tags_input",
+  "website",
   "route",
   "published",
+  "recommended",
   "software_details_section",
   "source_code_repository",
   "app_store_url",
@@ -61,6 +64,21 @@
    "reqd": 1
   },
   {
+   "description": "Labels used to group related resources and power the Similar Resources list",
+   "fieldname": "tags",
+   "fieldtype": "Table MultiSelect",
+   "label": "Tags",
+   "options": "Resource Tag Link"
+  },
+  {
+   "description": "Comma separated mirror of Tags. Web Forms cannot render Table MultiSelect, so the public submission form writes here and the controller syncs it into Tags.",
+   "fieldname": "tags_input",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Tags (comma separated)",
+   "no_copy": 1
+  },
+  {
    "description": "Required for Software (and its subcategories)",
    "fieldname": "source_code_repository",
    "fieldtype": "Data",
@@ -96,6 +114,14 @@
    "permlevel": 1
   },
   {
+   "default": "0",
+   "description": "Marks as a high-quality resource worth recommending to all users. (not editable from the public submission form)",
+   "fieldname": "recommended",
+   "fieldtype": "Check",
+   "label": "Recommended",
+   "permlevel": 1
+  },
+  {
    "description": "This is the app's unique web identifier used in the full app's url",
    "fieldname": "route",
    "fieldtype": "Data",
@@ -116,11 +142,11 @@
  "is_published_field": "published",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-25 22:56:59.798011",
+ "modified": "2026-08-28 20:42:35.223128",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource",
- "naming_rule": "By fieldname",
+ "naming_rule": "Random",
  "owner": "Administrator",
  "permissions": [
   {
@@ -168,9 +194,11 @@
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
  "search_fields": "title, category, published",
+ "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
+ "title_field": "title",
  "track_changes": 1,
  "track_seen": 1,
  "track_views": 1,

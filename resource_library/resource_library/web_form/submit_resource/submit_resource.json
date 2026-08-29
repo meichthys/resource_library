@@ -31,7 +31,7 @@
  ],
  "login_required": 1,
  "max_attachment_size": 0,
- "modified": "2026-08-28 01:00:00.000000",
+ "modified": "2026-08-29 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Submit Resource",
@@ -67,6 +67,19 @@
    "options": "Category",
    "read_only": 0,
    "reqd": 1,
+   "show_in_filter": 0
+  },
+  {
+   "allow_read_on_all_link_options": 0,
+   "description": "Separate tags with commas. New tags are reviewed by an admin before they appear publicly.",
+   "fieldname": "tags_input",
+   "fieldtype": "Data",
+   "hidden": 0,
+   "label": "Tags",
+   "max_length": 0,
+   "max_value": 0,
+   "read_only": 0,
+   "reqd": 0,
    "show_in_filter": 0
   },
   {
