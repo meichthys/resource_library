@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "category",
+  "status",
   "lft",
   "rgt",
   "is_group",
@@ -21,6 +22,18 @@
    "label": "Category",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "default": "Pending",
+   "description": "Categories requested by users stay Pending until an admin approves them. Only Approved categories are offered on the public site, and a resource cannot be published while its category is Pending.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nApproved",
+   "permlevel": 1,
+   "reqd": 1
   },
   {
    "fieldname": "lft",
@@ -65,7 +78,7 @@
  "index_web_pages_for_search": 1,
  "is_tree": 1,
  "links": [],
- "modified": "2026-02-25 23:48:57.036218",
+ "modified": "2026-08-30 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Category",
@@ -84,6 +97,17 @@
    "role": "System Manager",
    "share": 1,
    "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "All"
   }
  ],
  "row_format": "Dynamic",

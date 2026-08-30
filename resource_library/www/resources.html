@@ -74,7 +74,7 @@
 
 	{% if not resources %}
 	<div class="no-results">
-		No resources found{% if selected_category %} in this category{% endif %}.
+		{{ empty_message }}
 	</div>
 	{% endif %}
 

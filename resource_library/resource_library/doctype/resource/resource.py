@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 import frappe
 from frappe import _
-from frappe.utils import get_url
+from frappe.utils import cint, get_url
 from frappe.utils.nestedset import get_ancestors_of
 from frappe.website.website_generator import WebsiteGenerator
 
@@ -16,6 +16,11 @@ from resource_library.badge import BADGE_SIZE
 REPO_URL_PATTERN = re.compile(
 	r"^https?://(?:www\.)?(github\.com|gitlab\.com)/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$"
 )
+
+# Resources anywhere in this branch of the tree are software, so they carry the
+# repository and app store fields and must name a repository. The desk form and
+# the public submission form both key their field visibility off this.
+SOFTWARE_CATEGORY = "Software"
 
 
 def get_repo_badges(repo_url):
@@ -104,6 +109,12 @@ def get_descendant_categories(category):
 	return descendants
 
 
+def get_approved_category_names():
+	"""Every category an admin has approved. A category someone requested stays
+	off the public site until then, and so does anything filed under it."""
+	return set(frappe.get_all("Category", filters={"status": "Approved"}, pluck="name"))
+
+
 def get_approved_tag_names():
 	"""Every tag an admin has approved. User-suggested tags stay hidden from
 	the public site until then."""
@@ -130,6 +141,104 @@ def get_tags_by_resource(resource_names, approved=None):
 		if row.tag in approved:
 			grouped.setdefault(row.parent, []).append(row.tag)
 	return grouped
+
+
+@frappe.whitelist()
+def get_category_options():
+	"""Approved categories offered in the submission form's category pickers.
+
+	Each option carries its full root-to-leaf path as the label, so a flat
+	dropdown still reads as a tree; `is_group`, since only a group category can
+	be asked for as the parent of a new one; and `in_software`, so the form can
+	show the software only fields without a round trip per category change.
+	Pending categories are left out for the same reason pending tags are: a
+	request from another user should not look like an established option.
+
+	Ancestry comes from walking parent_category rather than ordering on
+	lft/rgt, for the same reason get_category_path does: the nested-set
+	boundaries on this site have repeatedly drifted out of sync after normal
+	edits.
+	"""
+	rows = frappe.get_all(
+		"Category", filters={"status": "Approved"}, fields=["name", "parent_category", "is_group"]
+	)
+	parents = {row.name: row.parent_category for row in rows}
+
+	def ancestry(name):
+		"""The category itself, then each parent above it, closest first."""
+		chain = []
+		seen = set()
+		while name and name not in seen:
+			chain.append(name)
+			seen.add(name)
+			name = parents.get(name)
+		return chain
+
+	options = []
+	for row in rows:
+		chain = ancestry(row.name)
+		options.append(
+			{
+				"value": row.name,
+				"label": " > ".join(reversed(chain)),
+				"is_group": cint(row.is_group),
+				"in_software": int(SOFTWARE_CATEGORY in chain),
+			}
+		)
+
+	options.sort(key=lambda option: option["label"])
+	return options
+
+
+def resolve_category_name(raw, parent=None, is_group=0):
+	"""Map a typed category label to a Category docname.
+
+	A label that does not exist yet is created without a status so the doctype
+	default (Pending) applies, keeping user-requested categories off the public
+	site, and off other submitters' pickers, until an admin approves them.
+
+	A request can name a parent so the new category lands inside the existing
+	tree instead of as another root, and say whether it should be able to hold
+	subcategories of its own. The parent has to be an approved group: reshaping
+	the approved tree, or hanging a request off a category that is itself only
+	a request, is not something a public submission gets to do.
+	"""
+	label = (raw or "").strip()
+	if not label:
+		return None
+
+	existing = frappe.db.get_value("Category", {"category": label}, "name")
+	if existing:
+		# Placement belongs to whoever approved the category. The parent and
+		# group flag on a request only describe a category being created.
+		return existing
+
+	parent = (parent or "").strip()
+	if parent:
+		placement = frappe.db.get_value("Category", parent, ["status", "is_group"], as_dict=True)
+		if not placement or placement.status != "Approved":
+			frappe.throw(
+				_("Parent category {0} is not available to file a new category under.").format(
+					frappe.bold(parent)
+				)
+			)
+		if not placement.is_group:
+			frappe.throw(
+				_("Parent category {0} is not a group, so it cannot contain subcategories.").format(
+					frappe.bold(parent)
+				)
+			)
+
+	category = frappe.get_doc(
+		{
+			"doctype": "Category",
+			"category": label,
+			"parent_category": parent or None,
+			"is_group": cint(is_group),
+		}
+	)
+	category.insert(ignore_permissions=True)
+	return category.name
 
 
 @frappe.whitelist()
@@ -173,6 +282,17 @@ def resolve_tag_names(raw):
 
 
 @frappe.whitelist()
+def get_category_status(category):
+	"""Approval status of a category, for the desk form's warning banner.
+
+	A dedicated method rather than frappe.client.get_value from the client,
+	because status sits at permlevel 1 on Category and reading it that way
+	depends on the caller holding that level.
+	"""
+	return frappe.db.get_value("Category", category, "status")
+
+
+@frappe.whitelist()
 def category_in_group(category, group):
 	"""Return True if `category` is `group` itself or a descendant of it in the Category tree.
 
@@ -193,9 +313,62 @@ def category_in_group(category, group):
 
 class Resource(WebsiteGenerator):
 	def validate(self):
-		if category_in_group(self.category, "Software") and not self.source_code_repository:
+		self.sync_category()
+		if category_in_group(self.category, SOFTWARE_CATEGORY) and not self.source_code_repository:
 			frappe.throw(_("Source Code Repository is required for Software resources"))
 		self.sync_tags()
+		self.validate_category_approved()
+
+	def sync_category(self):
+		"""Keep the Category link and its plain text mirror in step.
+
+		Web Forms validate Link fields against existing records, so the public
+		submission form cannot be used to request a category that does not
+		exist yet; it writes the plain text `category_input` instead, alongside
+		the parent and group flag to file a new one with. Whichever side
+		actually changed on this save wins: the desk edits the link, the web
+		form edits the text field.
+		"""
+		previous_input = None
+		if not self.is_new():
+			previous_input = frappe.db.get_value("Resource", self.name, "category_input")
+
+		if (self.category_input or "") != (previous_input or ""):
+			resolved = resolve_category_name(
+				self.category_input, self.category_parent_input, self.category_is_group_input
+			)
+			if resolved:
+				self.category = resolved
+
+		self.category_input = self.category or ""
+
+		# The parent and group flag were only ever an instruction for creating a
+		# category. Once one is resolved, hold them to where that category
+		# actually sits, so they never linger as a request that was not honoured.
+		placement = (
+			frappe.db.get_value("Category", self.category, ["parent_category", "is_group"], as_dict=True)
+			if self.category
+			else None
+		)
+		self.category_parent_input = (placement and placement.parent_category) or ""
+		self.category_is_group_input = cint(placement and placement.is_group)
+
+	def validate_category_approved(self):
+		"""Block publishing into a category an admin has not approved yet.
+
+		Submitting under a requested category is fine, but publishing would put
+		that category into the public tree, so the resource waits until the
+		category itself is approved.
+		"""
+		if not self.published or not self.category:
+			return
+
+		if frappe.db.get_value("Category", self.category, "status") != "Approved":
+			frappe.throw(
+				_("Category {0} is pending approval, so this resource cannot be published yet.").format(
+					frappe.bold(self.category)
+				)
+			)
 
 	def sync_tags(self):
 		"""Keep the Tags child table and its comma separated mirror in step.
@@ -302,7 +475,9 @@ class Resource(WebsiteGenerator):
 		if not scores:
 			return []
 
-		# Re-query with published=1 so tag matches on unpublished drafts drop out.
+		# Re-query with published=1 so tag matches on unpublished drafts drop out,
+		# and with the same approved-category rule the main listing applies, so a
+		# category set back to Pending takes its resources out of here too.
 		# Field list mirrors the main listing so the shared card macro renders.
 		fields = ["name", "title", "route", "description", "category", "icon", "recommended"]
 		has_likes_column = frappe.db.has_column("Resource", "_liked_by")
@@ -310,7 +485,13 @@ class Resource(WebsiteGenerator):
 			fields.append("_liked_by")
 
 		matches = frappe.get_all(
-			"Resource", filters={"name": ["in", list(scores)], "published": 1}, fields=fields
+			"Resource",
+			filters={
+				"name": ["in", list(scores)],
+				"published": 1,
+				"category": ["in", sorted(get_approved_category_names())],
+			},
+			fields=fields,
 		)
 		matches.sort(key=lambda r: (-scores.get(r.name, 0), r.title))
 		matches = matches[:limit]

@@ -50,6 +50,13 @@
 	--placeholder-color: rgba(255, 255, 255, 0.5);
 	--icon-stroke: var(--rl-text-muted);
 
+	/*
+	 * Breadcrumb separator. Frappe's default is a data URI with a near-black
+	 * stroke, which vanishes against the gradient backdrop; this is the same
+	 * chevron stroked white.
+	 */
+	--right-arrow-svg: url("data: image/svg+xml;utf8, <svg width='6' height='8' viewBox='0 0 6 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1.25 7.5L4.75 4L1.25 0.5' stroke='white' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+
 	--border-color: var(--rl-glass-border);
 	--dark-border-color: var(--rl-glass-border-strong);
 	--table-border-color: var(--rl-glass-border);
@@ -159,6 +166,25 @@ h1, h2, h3, h4, h5, h6 {
 .web-form-title,
 .web-form-introduction {
 	color: var(--rl-text) !important;
+}
+
+/*
+ * Breadcrumbs. Bootstrap greys out the current page's crumb against a light
+ * page; on the gradient backdrop that reads as barely there, so both crumbs
+ * are pulled back up to the site's own text colours.
+ */
+.breadcrumb-item a {
+	color: var(--rl-text);
+}
+
+.breadcrumb-item a:hover {
+	color: var(--rl-text);
+	text-decoration: underline;
+}
+
+.breadcrumb-item.active,
+.breadcrumb-item.active span {
+	color: var(--rl-text-muted);
 }
 
 .form-control {
@@ -329,10 +355,11 @@ label,
 }
 
 /*
- * Tag picker on the submission web form.
- * The MultiSelectPills control normally relies on desk.bundle.css for its
- * layout, and that is not loaded on public pages, so the pill/input/dropdown
- * layout is defined here in full rather than only recoloured.
+ * Tag and category pickers on the submission web form.
+ * The MultiSelectPills and Autocomplete controls normally rely on
+ * desk.bundle.css for their layout, and that is not loaded on public pages, so
+ * the pill/input/dropdown layout is defined here in full rather than only
+ * recoloured. The dropdown rules below are shared by both pickers.
  */
 .rl-tag-picker .table-multiselect {
 	display: flex;
@@ -399,7 +426,8 @@ label,
 }
 
 /* Autocomplete dropdown */
-.rl-tag-picker .awesomplete > ul {
+.rl-tag-picker .awesomplete > ul,
+.rl-category-picker .awesomplete > ul {
 	position: absolute;
 	z-index: 20;
 	left: 0;
@@ -415,11 +443,13 @@ label,
 	overflow-y: auto;
 }
 
-.rl-tag-picker .awesomplete > ul[hidden] {
+.rl-tag-picker .awesomplete > ul[hidden],
+.rl-category-picker .awesomplete > ul[hidden] {
 	display: none;
 }
 
-.rl-tag-picker .awesomplete > ul > li {
+.rl-tag-picker .awesomplete > ul > li,
+.rl-category-picker .awesomplete > ul > li {
 	padding: 5px 8px;
 	border-radius: 6px;
 	color: var(--rl-text);
@@ -428,38 +458,61 @@ label,
 }
 
 .rl-tag-picker .awesomplete > ul > li:hover,
-.rl-tag-picker .awesomplete > ul > li[aria-selected="true"] {
+.rl-tag-picker .awesomplete > ul > li[aria-selected="true"],
+.rl-category-picker .awesomplete > ul > li:hover,
+.rl-category-picker .awesomplete > ul > li[aria-selected="true"] {
 	background: var(--rl-glass-bg-strong);
 }
 
-.rl-tag-picker .awesomplete mark {
+.rl-tag-picker .awesomplete mark,
+.rl-category-picker .awesomplete mark {
 	background: transparent;
 	color: inherit;
 	font-weight: 700;
 }
 
+.rl-category-picker .awesomplete {
+	position: relative;
+	display: block;
+}
+
+.rl-category-picker .awesomplete > input {
+	width: 100%;
+}
+
+/*
+ * Pending-review notice under the tag and category pickers. One wrapping
+ * sentence, not an icon column beside the text: the notice runs to two or
+ * three lines, and hanging them off a flex column left every line after the
+ * first indented under itself.
+ */
 .rl-tag-note {
-	display: flex;
-	align-items: flex-start;
-	gap: 0.4rem;
 	margin-top: 0.4rem;
 	font-size: 0.78rem;
 	line-height: 1.45;
 	color: var(--rl-text-muted);
+	overflow-wrap: anywhere;
 }
 
 .rl-tag-note:empty {
 	display: none;
 }
 
+.rl-tag-note strong {
+	color: var(--rl-text);
+	font-weight: 600;
+}
+
+/* Inline, so wrapped lines start at the left edge rather than indenting under
+   the first word. */
 .rl-tag-note-icon {
-	flex-shrink: 0;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	width: 15px;
 	height: 15px;
-	margin-top: 1px;
+	margin-right: 0.35rem;
+	vertical-align: middle;
 	border-radius: 50%;
 	background: rgba(212, 169, 92, 0.92);
 	color: #2e1f08;

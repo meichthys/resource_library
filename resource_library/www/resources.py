@@ -4,6 +4,7 @@ from urllib.parse import quote
 import frappe
 
 from resource_library.resource_library.doctype.resource.resource import (
+	get_approved_category_names,
 	get_approved_tag_names,
 	get_category_path,
 	get_descendant_categories,
@@ -34,6 +35,32 @@ def build_url(category, favorites_only, sort, recommended_only, tag):
 	return "/resources" + ("?" + "&".join(params) if params else "")
 
 
+
+
+def build_empty_message(category, tag, recommended_only, favorites_only):
+	"""Sentence for an empty listing, naming the filters that produced it.
+
+	"Recommended" is on unless a link explicitly turns it off, so it is the
+	usual reason a listing comes back empty; spelling the active filters out
+	beats leaving a visitor to work out why a category looks bare.
+	"""
+	parts = ["No resources found"]
+
+	if category:
+		parts.append(f"in the {category} category")
+	if tag:
+		parts.append(f"tagged {tag}")
+
+	qualifiers = []
+	if recommended_only:
+		qualifiers.append("recommended")
+	if favorites_only:
+		qualifiers.append("favorited")
+
+	if qualifiers:
+		parts.append("that are " + " and ".join(qualifiers))
+
+	return " ".join(parts) + "."
 
 
 def get_context(context):
@@ -68,9 +95,16 @@ def get_context(context):
 	path_pills = []
 	option_pills = []
 
+	# Categories a user has requested but an admin has not approved yet stay out
+	# of the public tree, and so does anything filed under them. Resource blocks
+	# publishing into a pending category, but a category can also be set back to
+	# Pending long after its resources went live, so the listing has to filter on
+	# the category's status rather than trust that check alone.
+	approved_categories = get_approved_category_names()
+
 	if selected_category:
-		descendants = get_descendant_categories(selected_category)
-		filters["category"] = ["in", [selected_category] + descendants]
+		branch = [selected_category, *get_descendant_categories(selected_category)]
+		filters["category"] = ["in", [name for name in branch if name in approved_categories]]
 
 		path_pills = [
 			{"name": name, "label": name, "url": url(category=name)}
@@ -79,15 +113,17 @@ def get_context(context):
 
 		children = frappe.get_all(
 			"Category",
-			filters={"parent_category": selected_category},
+			filters={"parent_category": selected_category, "status": "Approved"},
 			fields=["name", "category as label"],
 			order_by="lft asc",
 		)
 		option_pills = [{"name": c.name, "label": c.label, "url": url(category=c.name)} for c in children]
 	else:
+		filters["category"] = ["in", sorted(approved_categories)]
+
 		roots = frappe.get_all(
 			"Category",
-			filters={"parent_category": ["is", "not set"]},
+			filters={"parent_category": ["is", "not set"], "status": "Approved"},
 			fields=["name", "category as label"],
 			order_by="lft asc",
 		)
@@ -150,5 +186,8 @@ def get_context(context):
 	context.all_url = url(category="", tag="")
 	context.favorites_toggle_url = url(favorites=not favorites_only)
 	context.recommended_toggle_url = url(recommended=not recommended_only)
+	context.empty_message = build_empty_message(
+		selected_category, selected_tag, recommended_only, favorites_only
+	)
 	context.no_breadcrumbs = True
 	context.title = "Resources"

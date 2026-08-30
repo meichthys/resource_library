@@ -10,7 +10,7 @@
    "label": "Resources Added Over Time"
   }
  ],
- "content": "[{\"id\": \"rlCardTotalResources\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Resources\", \"col\": 4}}, {\"id\": \"rlCardPublished\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Published Resources\", \"col\": 4}}, {\"id\": \"rlCardCategories\", \"type\": \"number_card\", \"data\": {\"number_card_name\": \"Total Categories\", \"col\": 4}}, {\"id\": \"rlSpacer0\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"rlChartByCategory\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Resources by Category\", \"col\": 6}}, {\"id\": \"rlChartOverTime\", \"type\": \"chart\", \"data\": {\"chart_name\": \"Resources Added Over Time\", \"col\": 6}}, {\"id\": \"rlSpacer2\", \"type\": \"spacer\", \"data\": {\"col\": 12}}, {\"id\": \"rlShortcutWebsite\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Website\", \"col\": 4}}]",
+ "content": "[{\"id\":\"rlCardTotalResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Resources\",\"col\":4}},{\"id\":\"rlCardPublished\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Published Resources\",\"col\":4}},{\"id\":\"rlCardPendingResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Resources\",\"col\":4}},{\"id\":\"rlCardCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Categories\",\"col\":6}},{\"id\":\"rlCardPendingCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Categories\",\"col\":6}},{\"id\":\"rlCardTotalTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Tags\",\"col\":6}},{\"id\":\"rlCardPendingTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Tags\",\"col\":6}},{\"id\":\"rlSpacer0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlChartByCategory\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources by Category\",\"col\":6}},{\"id\":\"rlChartOverTime\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources Added Over Time\",\"col\":6}},{\"id\":\"rlSpacer2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlShortcutWebsite\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Website\",\"col\":4}}]",
  "creation": "2026-08-26 18:34:44.212142",
  "custom_blocks": [],
  "docstatus": 0,
@@ -22,7 +22,7 @@
  "is_hidden": 0,
  "label": "Resource Library",
  "links": [],
- "modified": "2026-08-26 18:46:21.282173",
+ "modified": "2026-08-29 17:12:57.398630",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource Library",
@@ -36,8 +36,24 @@
    "number_card_name": "Published Resources"
   },
   {
+   "label": "Pending Resources",
+   "number_card_name": "Pending Resources"
+  },
+  {
    "label": "Total Categories",
    "number_card_name": "Total Categories"
+  },
+  {
+   "label": "Pending Categories",
+   "number_card_name": "Pending Categories"
+  },
+  {
+   "label": "Total Tags",
+   "number_card_name": "Total Tags"
+  },
+  {
+   "label": "Pending Tags",
+   "number_card_name": "Pending Tags"
   }
  ],
  "owner": "Administrator",

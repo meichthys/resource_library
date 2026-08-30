@@ -1,4 +1,4 @@
-/* ../../../../tmp/tmp-1882860-AdOolaKRdiLs/resource_library/resource_library/public/css/resource_library.bundle.css */
+/* ../../../../tmp/tmp-2632830-5o0Psqo2s6sJ/resource_library/resource_library/public/css/resource_library.bundle.css */
 :root {
   --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
   --rl-text: #ffffff;
@@ -42,6 +42,7 @@
   --disabled-text-color: rgba(255, 255, 255, 0.4);
   --placeholder-color: rgba(255, 255, 255, 0.5);
   --icon-stroke: var(--rl-text-muted);
+  --right-arrow-svg: url("data: image/svg+xml;utf8, <svg width='6' height='8' viewBox='0 0 6 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1.25 7.5L4.75 4L1.25 0.5' stroke='white' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   --border-color: var(--rl-glass-border);
   --dark-border-color: var(--rl-glass-border-strong);
   --table-border-color: var(--rl-glass-border);
@@ -134,6 +135,17 @@ h6 {
 .web-form-title,
 .web-form-introduction {
   color: var(--rl-text) !important;
+}
+.breadcrumb-item a {
+  color: var(--rl-text);
+}
+.breadcrumb-item a:hover {
+  color: var(--rl-text);
+  text-decoration: underline;
+}
+.breadcrumb-item.active,
+.breadcrumb-item.active span {
+  color: var(--rl-text-muted);
 }
 .form-control {
   background: rgba(255, 255, 255, 0.07);
@@ -325,11 +337,12 @@ label,
   width: 10px;
   height: 10px;
 }
-.rl-tag-picker .awesomplete > ul {
+.rl-tag-picker .awesomplete > ul,
+.rl-category-picker .awesomplete > ul {
   position: absolute;
   z-index: 20;
-  left: 0;
   right: 0;
+  left: 0;
   margin-top: 4px;
   padding: 4px;
   list-style: none;
@@ -340,10 +353,12 @@ label,
   max-height: 220px;
   overflow-y: auto;
 }
-.rl-tag-picker .awesomplete > ul[hidden] {
+.rl-tag-picker .awesomplete > ul[hidden],
+.rl-category-picker .awesomplete > ul[hidden] {
   display: none;
 }
-.rl-tag-picker .awesomplete > ul > li {
+.rl-tag-picker .awesomplete > ul > li,
+.rl-category-picker .awesomplete > ul > li {
   padding: 5px 8px;
   border-radius: 6px;
   color: var(--rl-text);
@@ -351,34 +366,46 @@ label,
   cursor: pointer;
 }
 .rl-tag-picker .awesomplete > ul > li:hover,
-.rl-tag-picker .awesomplete > ul > li[aria-selected=true] {
+.rl-tag-picker .awesomplete > ul > li[aria-selected=true],
+.rl-category-picker .awesomplete > ul > li:hover,
+.rl-category-picker .awesomplete > ul > li[aria-selected=true] {
   background: var(--rl-glass-bg-strong);
 }
-.rl-tag-picker .awesomplete mark {
+.rl-tag-picker .awesomplete mark,
+.rl-category-picker .awesomplete mark {
   background: transparent;
   color: inherit;
   font-weight: 700;
 }
+.rl-category-picker .awesomplete {
+  position: relative;
+  display: block;
+}
+.rl-category-picker .awesomplete > input {
+  width: 100%;
+}
 .rl-tag-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.4rem;
   margin-top: 0.4rem;
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--rl-text-muted);
+  overflow-wrap: anywhere;
 }
 .rl-tag-note:empty {
   display: none;
 }
+.rl-tag-note strong {
+  color: var(--rl-text);
+  font-weight: 600;
+}
 .rl-tag-note-icon {
-  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 15px;
   height: 15px;
-  margin-top: 1px;
+  margin-left: 0.35rem;
+  vertical-align: middle;
   border-radius: 50%;
   background: rgba(212, 169, 92, 0.92);
   color: #2e1f08;
@@ -411,14 +438,14 @@ label,
 .recommended-banner {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 50%;
+  transform: translateX(50%);
   display: flex;
   align-items: center;
   gap: 0.28rem;
   padding: 0.22rem 0.7rem 0.26rem;
   border-radius: 0 0 8px 8px;
-  background: linear-gradient(135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
+  background: linear-gradient(-135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
   color: #2e1f08;
   font-size: 0.62rem;
   font-weight: 700;
@@ -435,7 +462,7 @@ label,
 .favorite-btn {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
+  left: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -489,7 +516,7 @@ label,
 .card-body {
   flex: 1;
   min-width: 0;
-  padding-right: 3.25rem;
+  padding-left: 3.25rem;
 }
 .card-cat {
   display: inline-block;
@@ -547,4 +574,4 @@ label,
   width: 0.75em;
   height: 0.75em;
 }
-/*# sourceMappingURL=resource_library.bundle.I5PL52YJ.css.map */
+/*# sourceMappingURL=resource_library.bundle.DD2EZRZC.css.map */

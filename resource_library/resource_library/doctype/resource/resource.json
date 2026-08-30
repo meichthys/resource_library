@@ -13,6 +13,9 @@
   "icon",
   "column_break_mopm",
   "category",
+  "category_input",
+  "category_parent_input",
+  "category_is_group_input",
   "tags",
   "tags_input",
   "website",
@@ -62,6 +65,31 @@
    "label": "Category",
    "options": "Category",
    "reqd": 1
+  },
+  {
+   "description": "Plain text mirror of Category. Web Forms validate Link fields against existing records, so the public submission form writes here and the controller resolves it into Category, creating a Pending one when the name is new.",
+   "fieldname": "category_input",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Category (requested)",
+   "no_copy": 1
+  },
+  {
+   "description": "Where a requested category should be filed. Only read while creating a category the site does not have yet, then normalized to the placement the resolved category actually has.",
+   "fieldname": "category_parent_input",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Parent Category (requested)",
+   "no_copy": 1
+  },
+  {
+   "default": "0",
+   "description": "Whether a requested category should be able to contain subcategories. Same lifecycle as the parent above.",
+   "fieldname": "category_is_group_input",
+   "fieldtype": "Check",
+   "hidden": 1,
+   "label": "Requested Category Is a Group",
+   "no_copy": 1
   },
   {
    "description": "Labels used to group related resources and power the Similar Resources list",
@@ -142,7 +170,7 @@
  "is_published_field": "published",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-08-28 20:42:35.223128",
+ "modified": "2026-08-30 02:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource",
