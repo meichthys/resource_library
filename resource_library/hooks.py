@@ -3,7 +3,7 @@ app_title = "Resource Library"
 app_publisher = "Meichthys"
 app_description = "A resource management app built on the Frappe framework"
 app_email = "resource_management@meichthys.com"
-app_license = "mit"
+app_license = "mit-0"
 
 # Apps
 # ------------------

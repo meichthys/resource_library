@@ -1,7 +1,69 @@
+/**
+ * Fields that only apply to software resources. The desk form keeps these in a
+ * "Software Details" section it shows or hides as a unit (see resource.js);
+ * Web Forms have no sections, so the same rule is applied field by field here.
+ */
+const SOFTWARE_FIELDS = ["source_code_repository", "app_store_url"];
+
 frappe.ready(function () {
+	if (in_view_mode()) {
+		setup_view_mode();
+		return;
+	}
+
 	setup_category_picker();
 	setup_tag_picker();
 });
+
+/**
+ * True on /submit-resource/<name>, the route Frappe treats as read: the same
+ * form without a save button. /new and /<name>/edit are the writable ones.
+ */
+function in_view_mode() {
+	return !!(frappe.web_form && frappe.web_form.in_view_mode);
+}
+
+/**
+ * Frappe only drops the save button in view mode; every field underneath is
+ * still a live input, so a viewer can pull a tag off, retype a category or
+ * edit a URL and be left thinking it stuck. Mark the whole form read-only and
+ * skip the pickers, which would otherwise put a fully interactive control
+ * (removable pills, an open dropdown) on a page that cannot save.
+ *
+ * Read-only fields render their value as text, which is what a viewer wants
+ * anyway: `tags_input` and `category_input` already carry the plain text
+ * mirrors the pickers would have rebuilt.
+ */
+function setup_view_mode() {
+	const web_form = frappe.web_form;
+	if (!web_form || !web_form.fields_dict) return;
+
+	// Frappe colours a plain read-only value with --disabled-text-color, but
+	// controls that render their own markup instead of the plain display area
+	// keep the inherited body colour, so values came out a mix of grey and
+	// white. The stylesheet settles that off this class.
+	$(".web-form").addClass("rl-view-mode");
+
+	Object.keys(web_form.fields_dict).forEach(function (fieldname) {
+		const field = web_form.fields_dict[fieldname];
+		if (!field || !field.df) return;
+
+		field.df.read_only = 1;
+		field.refresh();
+	});
+
+	// How a category was requested is not part of the resource, and the
+	// software only fields only apply when there is something in them.
+	const doc = web_form.doc || {};
+	const conditional = ["category_parent_input", "category_is_group_input"].concat(
+		SOFTWARE_FIELDS.filter((fieldname) => !doc[fieldname])
+	);
+
+	conditional.forEach(function (fieldname) {
+		const field = web_form.fields_dict[fieldname];
+		if (field) field.toggle(false);
+	});
+}
 
 /**
  * Both pickers warn that what was typed is a request an admin still has to
@@ -24,13 +86,6 @@ function render_pending_note($note, message) {
 function bold_value(value) {
 	return `<strong>${frappe.utils.escape_html(value)}</strong>`;
 }
-
-/**
- * Fields that only apply to software resources. The desk form keeps these in a
- * "Software Details" section it shows or hides as a unit (see resource.js);
- * Web Forms have no sections, so the same rule is applied field by field here.
- */
-const SOFTWARE_FIELDS = ["source_code_repository", "app_store_url"];
 
 /**
  * Web Forms validate Link fields against existing records, so the Category

@@ -1,4 +1,4 @@
-/* ../../../../tmp/tmp-2657387-XLxwts5aCci2/resource_library/resource_library/public/css/resource_library.bundle.css */
+/* ../../../../tmp/tmp-2683979-NCPjtqtOgnPm/resource_library/resource_library/public/css/resource_library.bundle.css */
 :root {
   --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
   --rl-text: #ffffff;
@@ -300,6 +300,17 @@ label,
   background-color: var(--rl-bg);
   color: var(--rl-text);
 }
+.rl-view-mode .control-value,
+.rl-view-mode .control-value *,
+.rl-view-mode .ql-editor,
+.rl-view-mode .ql-editor *,
+.rl-view-mode .attached-file-link,
+.rl-view-mode .missing-image {
+  color: var(--disabled-text-color);
+}
+.rl-view-mode .ql-toolbar {
+  display: none;
+}
 .rl-tag-picker .table-multiselect {
   display: flex;
   flex-wrap: wrap;
@@ -363,8 +374,8 @@ label,
 .rl-category-picker .awesomplete > ul {
   position: absolute;
   z-index: 20;
-  right: 0;
   left: 0;
+  right: 0;
   margin-top: 4px;
   padding: 4px;
   list-style: none;
@@ -426,7 +437,7 @@ label,
   justify-content: center;
   width: 15px;
   height: 15px;
-  margin-left: 0.35rem;
+  margin-right: 0.35rem;
   vertical-align: middle;
   border-radius: 50%;
   background: rgba(212, 169, 92, 0.92);
@@ -460,14 +471,14 @@ label,
 .recommended-banner {
   position: absolute;
   top: 0;
-  right: 50%;
-  transform: translateX(50%);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 0.28rem;
   padding: 0.22rem 0.7rem 0.26rem;
   border-radius: 0 0 8px 8px;
-  background: linear-gradient(-135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
+  background: linear-gradient(135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
   color: #2e1f08;
   font-size: 0.62rem;
   font-weight: 700;
@@ -484,7 +495,7 @@ label,
 .favorite-btn {
   position: absolute;
   top: 0.75rem;
-  left: 0.75rem;
+  right: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -509,7 +520,7 @@ label,
   color: var(--rl-text, #f5f5f5);
 }
 .favorite-btn.favorited {
-  color: #9f1239;
+  color: #fb7185;
 }
 .resource-card:hover {
   background: var(--rl-surface-hover, rgba(255, 255, 255, 0.06));
@@ -538,7 +549,7 @@ label,
 .card-body {
   flex: 1;
   min-width: 0;
-  padding-left: 3.25rem;
+  padding-right: 3.25rem;
 }
 .card-cat {
   display: inline-block;
@@ -596,4 +607,4 @@ label,
   width: 0.75em;
   height: 0.75em;
 }
-/*# sourceMappingURL=resource_library.bundle.J2XJUUQT.css.map */
+/*# sourceMappingURL=resource_library.bundle.OFGMUBDW.css.map */

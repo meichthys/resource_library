@@ -399,6 +399,28 @@ label,
 }
 
 /*
+ * View mode on the submission form (/submit-resource/<name>), where every
+ * field has been made read-only. Frappe paints a plain read-only value with
+ * --disabled-text-color, but a control that renders its own markup rather than
+ * the plain display area, a Text Editor's HTML or an attachment's link, keeps
+ * the inherited body colour, so values came out a mix of grey and white. Field
+ * labels are left alone: they are meant to read brighter than the values.
+ */
+.rl-view-mode .control-value,
+.rl-view-mode .control-value *,
+.rl-view-mode .ql-editor,
+.rl-view-mode .ql-editor *,
+.rl-view-mode .attached-file-link,
+.rl-view-mode .missing-image {
+	color: var(--disabled-text-color);
+}
+
+/* A formatting toolbar on a field that cannot be edited is just noise. */
+.rl-view-mode .ql-toolbar {
+	display: none;
+}
+
+/*
  * Tag and category pickers on the submission web form.
  * The MultiSelectPills and Autocomplete controls normally rely on
  * desk.bundle.css for their layout, and that is not loaded on public pages, so
@@ -650,8 +672,13 @@ label,
 	color: var(--rl-text, #f5f5f5);
 }
 
+/*
+ * Rose 400 rather than the rose 800 this started on. The darker red read as
+ * near black against the gradient, which made both the filled heart and the
+ * count beside it hard to pick out.
+ */
 .favorite-btn.favorited {
-	color: #9f1239;
+	color: #fb7185;
 }
 
 .resource-card:hover {
