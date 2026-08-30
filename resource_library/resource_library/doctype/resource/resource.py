@@ -314,6 +314,47 @@ def resolve_tag_names(raw):
 
 
 @frappe.whitelist()
+def transfer_ownership(resource, user):
+	"""Hand a resource over to the person it actually belongs to.
+
+	The web form decides who may edit a submission by comparing the document's
+	owner against the session user (WebForm.has_web_form_permission), and "My
+	Submissions" is scoped the same way, so the owner field is the whole of what
+	has to move for someone to take over a resource an admin filed for them.
+
+	Written with db.set_value rather than a full save: nothing else about the
+	document is changing, and a save would re-run validation that can fail for
+	reasons that have nothing to do with the transfer, such as a published
+	resource whose category was set back to Pending after it went live.
+	"""
+	frappe.only_for("System Manager")
+
+	if not frappe.db.exists("Resource", resource):
+		frappe.throw(_("Resource {0} does not exist").format(frappe.bold(resource)))
+
+	if user == "Guest":
+		frappe.throw(_("A resource cannot be owned by Guest."))
+
+	target = frappe.db.get_value("User", user, ["enabled", "full_name"], as_dict=True)
+	if not target:
+		frappe.throw(_("User {0} does not exist").format(frappe.bold(user)))
+
+	if not target.enabled:
+		frappe.throw(_("User {0} is disabled and cannot own a resource.").format(frappe.bold(user)))
+
+	previous = frappe.db.get_value("Resource", resource, "owner")
+	if previous == user:
+		frappe.throw(_("{0} already owns this resource.").format(frappe.bold(user)))
+
+	frappe.db.set_value("Resource", resource, "owner", user)
+	frappe.get_doc("Resource", resource).add_comment(
+		"Info", _("Ownership transferred from {0} to {1}").format(previous, user)
+	)
+
+	return user
+
+
+@frappe.whitelist()
 def get_category_status(category):
 	"""Approval status of a category, for the desk form's warning banner.
 
