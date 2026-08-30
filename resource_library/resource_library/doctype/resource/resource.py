@@ -65,7 +65,39 @@ def get_list_context(context=None):
 	context = context or frappe._dict()
 	context.filters = {"owner": frappe.session.user}
 	context.no_breadcrumbs = True
+	context.get_list = get_submission_list
 	return context
+
+
+def get_submission_list(**kwargs):
+	"""Rows for "My Submissions".
+
+	Two things the default listing gets wrong for a page whose whole job is to
+	report back on what you submitted:
+
+	frappe.www.list.prepare_filters pins is_published_field to 1 for any doctype
+	that declares one, so a submitter could only ever see the submissions that
+	had already been approved, never the ones still waiting. Owner scoping is
+	what keeps this list private, so the published filter can go.
+
+	And the Published column arrived as a raw 1, or as a blank cell for 0, since
+	web_form_list.js formats a value it was given no fieldtype for and skips
+	falsy ones entirely. Yes and No say the same thing and survive that.
+	"""
+	from frappe.www.list import get_list
+
+	filters = dict(kwargs.pop("filters", None) or {})
+	filters.pop("published", None)
+
+	# Restored because frappe.www.list.get_list_data only passes it when the
+	# module does not override get_list, and Resource does allow guest views.
+	rows = get_list(filters=filters, ignore_permissions=True, **kwargs)
+
+	for row in rows:
+		if "published" in row:
+			row["published"] = _("Yes") if row["published"] else _("No")
+
+	return rows
 
 
 def get_category_path(category):

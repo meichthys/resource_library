@@ -51,6 +51,25 @@
 	--icon-stroke: var(--rl-text-muted);
 
 	/*
+	 * The portal pages (My Account, error states) build their secondary text
+	 * and icon strokes from --text-light and the avatar frame variables, none
+	 * of which the overrides above reach, so they kept Frappe's dark-on-light
+	 * values and were close to unreadable on the gradient.
+	 *
+	 * --bg-light-gray matters more than it looks: /me renders an inline
+	 * `.container { height: 100vh; background: var(--bg-light-gray) }` into the
+	 * head, which painted an opaque gray-100 sheet across the whole viewport,
+	 * hiding the gradient underneath and leaving white text on near-white. Its
+	 * only other use on the website is the password strength meter's track, so
+	 * a translucent white suits both.
+	 */
+	--text-light: var(--rl-text-muted);
+	--bg-light-gray: var(--rl-glass-bg);
+	--avatar-frame-bg: var(--rl-glass-bg-strong);
+	--avatar-frame-border: var(--rl-glass-border);
+	--avatar-frame-color: var(--rl-text);
+
+	/*
 	 * Breadcrumb separator. Frappe's default is a data URI with a near-black
 	 * stroke, which vanishes against the gradient backdrop; this is the same
 	 * chevron stroked white.
@@ -166,6 +185,31 @@ h1, h2, h3, h4, h5, h6 {
 .web-form-title,
 .web-form-introduction {
 	color: var(--rl-text) !important;
+}
+
+/*
+ * My Account (/me) and the other portal pages. The container asks for a flat
+ * --bg-color block, which reads as a solid slab dropped on the gradient; this
+ * gives it the same glass panel treatment as every other surface on the site.
+ */
+.portal-container {
+	background: var(--rl-glass-bg);
+	border: 1px solid var(--rl-glass-border);
+	border-radius: 16px;
+	color: var(--rl-text);
+	box-shadow: var(--rl-shadow);
+	-webkit-backdrop-filter: blur(16px);
+	backdrop-filter: blur(16px);
+}
+
+.portal-section a,
+.portal-footer a {
+	color: var(--rl-text);
+}
+
+.portal-section a:hover .item-link-text,
+.portal-footer a:hover {
+	color: var(--rl-text);
 }
 
 /*

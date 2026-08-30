@@ -1,4 +1,4 @@
-/* ../../../../tmp/tmp-2632830-Yykvfu5onRh7/resource_library/resource_library/public/css/resource_library.bundle.css */
+/* ../../../../tmp/tmp-2657387-XLxwts5aCci2/resource_library/resource_library/public/css/resource_library.bundle.css */
 :root {
   --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
   --rl-text: #ffffff;
@@ -42,6 +42,11 @@
   --disabled-text-color: rgba(255, 255, 255, 0.4);
   --placeholder-color: rgba(255, 255, 255, 0.5);
   --icon-stroke: var(--rl-text-muted);
+  --text-light: var(--rl-text-muted);
+  --bg-light-gray: var(--rl-glass-bg);
+  --avatar-frame-bg: var(--rl-glass-bg-strong);
+  --avatar-frame-border: var(--rl-glass-border);
+  --avatar-frame-color: var(--rl-text);
   --right-arrow-svg: url("data: image/svg+xml;utf8, <svg width='6' height='8' viewBox='0 0 6 8' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M1.25 7.5L4.75 4L1.25 0.5' stroke='white' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   --border-color: var(--rl-glass-border);
   --dark-border-color: var(--rl-glass-border-strong);
@@ -135,6 +140,23 @@ h6 {
 .web-form-title,
 .web-form-introduction {
   color: var(--rl-text) !important;
+}
+.portal-container {
+  background: var(--rl-glass-bg);
+  border: 1px solid var(--rl-glass-border);
+  border-radius: 16px;
+  color: var(--rl-text);
+  box-shadow: var(--rl-shadow);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.portal-section a,
+.portal-footer a {
+  color: var(--rl-text);
+}
+.portal-section a:hover .item-link-text,
+.portal-footer a:hover {
+  color: var(--rl-text);
 }
 .breadcrumb-item a {
   color: var(--rl-text);
@@ -341,8 +363,8 @@ label,
 .rl-category-picker .awesomplete > ul {
   position: absolute;
   z-index: 20;
-  left: 0;
   right: 0;
+  left: 0;
   margin-top: 4px;
   padding: 4px;
   list-style: none;
@@ -404,7 +426,7 @@ label,
   justify-content: center;
   width: 15px;
   height: 15px;
-  margin-right: 0.35rem;
+  margin-left: 0.35rem;
   vertical-align: middle;
   border-radius: 50%;
   background: rgba(212, 169, 92, 0.92);
@@ -438,14 +460,14 @@ label,
 .recommended-banner {
   position: absolute;
   top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 50%;
+  transform: translateX(50%);
   display: flex;
   align-items: center;
   gap: 0.28rem;
   padding: 0.22rem 0.7rem 0.26rem;
   border-radius: 0 0 8px 8px;
-  background: linear-gradient(135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
+  background: linear-gradient(-135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
   color: #2e1f08;
   font-size: 0.62rem;
   font-weight: 700;
@@ -462,7 +484,7 @@ label,
 .favorite-btn {
   position: absolute;
   top: 0.75rem;
-  right: 0.75rem;
+  left: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -516,7 +538,7 @@ label,
 .card-body {
   flex: 1;
   min-width: 0;
-  padding-right: 3.25rem;
+  padding-left: 3.25rem;
 }
 .card-cat {
   display: inline-block;
@@ -574,4 +596,4 @@ label,
   width: 0.75em;
   height: 0.75em;
 }
-/*# sourceMappingURL=resource_library.bundle.XMA7SBAT.css.map */
+/*# sourceMappingURL=resource_library.bundle.J2XJUUQT.css.map */
