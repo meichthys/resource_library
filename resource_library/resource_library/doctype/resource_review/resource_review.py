@@ -91,9 +91,7 @@ def get_user_review(resource, user=None):
 	if not name:
 		return None
 
-	return frappe.db.get_value(
-		"Resource Review", name, ["rating", "review", "status"], as_dict=True
-	)
+	return frappe.db.get_value("Resource Review", name, ["rating", "review", "status"], as_dict=True)
 
 
 @frappe.whitelist()

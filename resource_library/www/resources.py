@@ -38,8 +38,6 @@ def build_url(category, top_rated, sort, recommended_only, tag):
 	return "/resources" + ("?" + "&".join(params) if params else "")
 
 
-
-
 def build_empty_message(category, tag, recommended_only, top_rated):
 	"""Sentence for an empty listing, naming the filters that produced it.
 
@@ -165,9 +163,7 @@ def get_context(context):
 
 	# Ties on the average go to the resource more people agreed on, so a lone
 	# five star review does not outrank a well reviewed resource.
-	order_by = (
-		"average_rating desc, rating_count desc, title asc" if sort == "rating" else "title asc"
-	)
+	order_by = "average_rating desc, rating_count desc, title asc" if sort == "rating" else "title asc"
 
 	resources = frappe.get_all("Resource", filters=filters, fields=fields, order_by=order_by)
 
@@ -193,8 +189,6 @@ def get_context(context):
 	context.all_url = url(category="", tag="")
 	context.top_rated_toggle_url = url(top=not top_rated)
 	context.recommended_toggle_url = url(recommended=not recommended_only)
-	context.empty_message = build_empty_message(
-		selected_category, selected_tag, recommended_only, top_rated
-	)
+	context.empty_message = build_empty_message(selected_category, selected_tag, recommended_only, top_rated)
 	context.no_breadcrumbs = True
 	context.title = "Resources"
