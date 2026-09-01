@@ -1,4 +1,3 @@
-import json
 from urllib.parse import quote
 
 import frappe
@@ -16,18 +15,22 @@ no_cache = 1
 
 SORT_OPTIONS = {
 	"alpha": "Alphabetical",
-	"likes": "Number of Likes",
+	"rating": "Highest Rated",
 }
 
+# Stars a resource has to average before the Top Rated filter keeps it. An
+# unrated resource averages 0, so it falls out of that filter on its own.
+TOP_RATED_MINIMUM = 4
 
-def build_url(category, favorites_only, sort, recommended_only, tag):
+
+def build_url(category, top_rated, sort, recommended_only, tag):
 	params = []
 	if category:
 		params.append(f"category={quote(category)}")
 	if tag:
 		params.append(f"tag={quote(tag)}")
-	if favorites_only:
-		params.append("favorites=1")
+	if top_rated:
+		params.append("top_rated=1")
 	if sort and sort != "alpha":
 		params.append(f"sort={sort}")
 	if not recommended_only:
@@ -37,7 +40,7 @@ def build_url(category, favorites_only, sort, recommended_only, tag):
 
 
 
-def build_empty_message(category, tag, recommended_only, favorites_only):
+def build_empty_message(category, tag, recommended_only, top_rated):
 	"""Sentence for an empty listing, naming the filters that produced it.
 
 	"Recommended" is on unless a link explicitly turns it off, so it is the
@@ -54,8 +57,8 @@ def build_empty_message(category, tag, recommended_only, favorites_only):
 	qualifiers = []
 	if recommended_only:
 		qualifiers.append("recommended")
-	if favorites_only:
-		qualifiers.append("favorited")
+	if top_rated:
+		qualifiers.append(f"rated {TOP_RATED_MINIMUM} stars or higher")
 
 	if qualifiers:
 		parts.append("that are " + " and ".join(qualifiers))
@@ -65,7 +68,7 @@ def build_empty_message(category, tag, recommended_only, favorites_only):
 
 def get_context(context):
 	selected_category = frappe.form_dict.get("category", "")
-	favorites_only = frappe.form_dict.get("favorites") == "1"
+	top_rated = frappe.form_dict.get("top_rated") == "1"
 	sort = frappe.form_dict.get("sort") if frappe.form_dict.get("sort") in SORT_OPTIONS else "alpha"
 	# "Recommended" is on by default; only an explicit ?recommended=0 turns it off
 	recommended_only = frappe.form_dict.get("recommended") != "0"
@@ -81,12 +84,12 @@ def get_context(context):
 
 	def url(
 		category=selected_category,
-		favorites=favorites_only,
+		top=top_rated,
 		sort_by=sort,
 		recommended=recommended_only,
 		tag=selected_tag,
 	):
-		return build_url(category, favorites, sort_by, recommended, tag)
+		return build_url(category, top, sort_by, recommended, tag)
 
 	filters = {"published": 1}
 	if recommended_only:
@@ -129,7 +132,8 @@ def get_context(context):
 		)
 		option_pills = [{"name": c.name, "label": c.label, "url": url(category=c.name)} for c in roots]
 
-	has_likes_column = frappe.db.has_column("Resource", "_liked_by")
+	if top_rated:
+		filters["average_rating"] = [">=", TOP_RATED_MINIMUM]
 
 	# Restrict by docname when a filter cannot be expressed as a plain field
 	# match. None means unrestricted; an empty set means "match nothing".
@@ -144,31 +148,33 @@ def get_context(context):
 			)
 		)
 
-	if favorites_only and is_logged_in and has_likes_column:
-		filters["_liked_by"] = ["like", f'%"{frappe.session.user}"%']
-	elif favorites_only and (not is_logged_in or not has_likes_column):
-		# nobody has favorited anything yet, or viewer isn't logged in to have favorites
-		allowed_names = set()
-
 	if allowed_names is not None:
 		filters["name"] = ["in", list(allowed_names)]
 
-	fields = ["name", "title", "route", "description", "category", "icon", "recommended"]
-	if has_likes_column:
-		fields.append("_liked_by")
+	fields = [
+		"name",
+		"title",
+		"route",
+		"description",
+		"category",
+		"icon",
+		"recommended",
+		"average_rating",
+		"rating_count",
+	]
 
-	resources = frappe.get_all("Resource", filters=filters, fields=fields, order_by="title asc")
+	# Ties on the average go to the resource more people agreed on, so a lone
+	# five star review does not outrank a well reviewed resource.
+	order_by = (
+		"average_rating desc, rating_count desc, title asc" if sort == "rating" else "title asc"
+	)
+
+	resources = frappe.get_all("Resource", filters=filters, fields=fields, order_by=order_by)
 
 	tags_by_resource = get_tags_by_resource([r.name for r in resources], approved=approved_tags)
 
 	for r in resources:
-		liked_by = json.loads(r.pop("_liked_by", None) or "[]")
-		r["favorite_count"] = len(liked_by)
-		r["is_favorited"] = is_logged_in and frappe.session.user in liked_by
 		r["tags"] = [{"name": t, "url": url(tag=t)} for t in tags_by_resource.get(r.name, [])]
-
-	if sort == "likes":
-		resources = sorted(resources, key=lambda r: (-r["favorite_count"], r["title"]))
 
 	context.resources = resources
 	context.path_pills = path_pills
@@ -176,7 +182,8 @@ def get_context(context):
 	context.selected_category = selected_category
 	context.selected_tag = selected_tag
 	context.clear_tag_url = url(tag="")
-	context.favorites_only = favorites_only
+	context.top_rated = top_rated
+	context.top_rated_minimum = TOP_RATED_MINIMUM
 	context.recommended_only = recommended_only
 	context.sort = sort
 	context.sort_options = [
@@ -184,10 +191,10 @@ def get_context(context):
 	]
 	context.is_logged_in = is_logged_in
 	context.all_url = url(category="", tag="")
-	context.favorites_toggle_url = url(favorites=not favorites_only)
+	context.top_rated_toggle_url = url(top=not top_rated)
 	context.recommended_toggle_url = url(recommended=not recommended_only)
 	context.empty_message = build_empty_message(
-		selected_category, selected_tag, recommended_only, favorites_only
+		selected_category, selected_tag, recommended_only, top_rated
 	)
 	context.no_breadcrumbs = True
 	context.title = "Resources"

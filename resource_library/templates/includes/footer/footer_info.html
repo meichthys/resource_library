@@ -1,0 +1,33 @@
+{#
+	Shadows frappe's footer_info.html to split its two column row into three, so
+	the library totals sit centred between the copyright and the "Built on
+	Frappe" note. Everything else is frappe's markup, unchanged.
+#}
+<div class="footer-info">
+	<div class="row align-items-center">
+		<div class="footer-col-left col-md-4 col-12">
+			{% if copyright %}
+			&copy; {{ copyright }}
+			{% endif %}
+			{% if footer_address %}
+			{% if copyright %}<br>{% endif %}
+			{{ footer_address }}
+			{% endif %}
+		</div>
+
+		<div class="footer-col-stats col-md-4 col-12">
+			{% include "templates/includes/footer/footer_stats.html" %}
+		</div>
+
+		{# powered #}
+		<div class="footer-col-right col-md-4 col-12 footer-powered">
+			{% block powered %}
+			{%- if footer_powered -%}
+				{{ footer_powered }}
+			{%- else -%}
+				{% include "templates/includes/footer/footer_powered.html" %}
+			{%- endif -%}
+			{% endblock %}
+		</div>
+	</div>
+</div>

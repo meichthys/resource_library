@@ -1,0 +1,259 @@
+{#
+	The stock My Account page with this site's own two lists under it: what the
+	viewer has submitted, and what they have reviewed. Frappe's page is
+	inherited rather than copied, so the settings links it owns stay its own.
+#}
+{% extends "frappe/www/me.html" %}
+{% from "templates/includes/star_rating.html" import star_rating %}
+
+{% block page_content %}
+<div class="account-page">
+	{{ super() }}
+
+	<div class="account-library">
+		<section class="account-section">
+			<div class="account-head">
+				<h2 class="account-heading">My Submissions</h2>
+				<a href="/submit-resource/new" class="account-action">Submit a Resource</a>
+			</div>
+
+			{% if my_resources %}
+			<ul class="account-list">
+				{% for r in my_resources %}
+				<li class="account-item">
+					<div class="account-item-head">
+						{#
+							A resource has no public page until it is published: the web view is
+							served only while the published flag is set, and the route is not even
+							filled in before then. Until it is, the heading goes to the submission
+							itself, so every title leads somewhere.
+						#}
+						<a href="{{ '/' ~ r.route if r.published else r.edit_url }}" class="account-item-title">{{ r.title }}</a>
+						<span class="account-status {% if r.published %}is-live{% endif %}">
+							{{ "Published" if r.published else "Awaiting approval" }}
+						</span>
+					</div>
+
+					<div class="account-item-meta">
+						<span>{{ r.category }}</span>
+						<span class="account-sep">·</span>
+						<span>
+							{%- if r.rating_count -%}
+							{{ '%.1f' | format(r.average_rating) }} from {{ r.rating_count }} review{% if r.rating_count != 1 %}s{% endif %}
+							{%- else -%}
+							No reviews yet
+							{%- endif -%}
+						</span>
+						<a href="{{ r.edit_url }}" class="account-edit">Edit</a>
+					</div>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<p class="account-empty">You have not submitted a resource yet.</p>
+			{% endif %}
+		</section>
+
+		<section class="account-section">
+			<div class="account-head">
+				<h2 class="account-heading">My Reviews</h2>
+			</div>
+
+			{% if my_reviews %}
+			<ul class="account-list">
+				{% for review in my_reviews %}
+				<li class="account-item">
+					<div class="account-item-head">
+						{% if review.route %}
+						<a href="/{{ review.route }}#reviews" class="account-item-title">{{ review.title }}</a>
+						{% else %}
+						<span class="account-item-title">{{ review.title }}</span>
+						{% endif %}
+						<span class="account-status {% if review.status == 'Approved' %}is-live{% endif %}">
+							{{ "Published" if review.status == "Approved" else "Awaiting approval" }}
+						</span>
+					</div>
+
+					<div class="account-item-meta">
+						{{ star_rating(review.rating, max_rating, "0.85rem") }}
+						<span class="account-sep">·</span>
+						<span>{{ review.updated_on }}</span>
+					</div>
+
+					<p class="account-review">{{ review.review }}</p>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<p class="account-empty">You have not reviewed anything yet.</p>
+			{% endif %}
+		</section>
+	</div>
+</div>
+
+<style>
+/*
+ * super() renders the settings panel and the Home/Logout links, and the two
+ * lists follow both in document order, so nothing here has to reorder them.
+ * The links belong to the panel above them, so the 3rem the panel carries
+ * below itself moves down to the lists instead.
+ */
+.account-page .portal-container {
+	margin-bottom: 1rem;
+}
+
+/* Width matches .portal-container so the whole page lines up */
+.account-library {
+	width: 100%;
+	max-width: 540px;
+	margin: 2.5rem auto 3rem;
+	padding: 0 1rem;
+}
+
+.account-section + .account-section {
+	margin-top: 2rem;
+}
+
+.account-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 0.8rem;
+}
+
+.account-heading {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--rl-text, #f5f5f5);
+	margin: 0;
+}
+
+.account-action {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: var(--rl-text, #f5f5f5);
+	padding: 0.35rem 0.9rem;
+	border: 1px solid var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	border-radius: 999px;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: background 0.15s;
+}
+
+.account-action:hover {
+	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.14));
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: none;
+}
+
+.account-list {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.6rem;
+	margin: 0;
+	padding: 0;
+}
+
+.account-item {
+	background: var(--rl-bg-elevated, rgba(255, 255, 255, 0.08));
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	border-radius: 14px;
+	padding: 0.85rem 1rem;
+}
+
+.account-item-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.account-item-title {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: none;
+}
+
+a.account-item-title:hover {
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: underline;
+}
+
+/* Amber for anything still with a moderator, teal once it is public */
+.account-status {
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 0.65rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+	color: #2e1f08;
+	background: rgba(212, 169, 92, 0.92);
+}
+
+.account-status.is-live {
+	color: #04241f;
+	background: rgba(45, 212, 191, 0.92);
+}
+
+.account-item-meta {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-top: 0.35rem;
+	font-size: 0.75rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.account-sep {
+	opacity: 0.6;
+}
+
+.account-edit {
+	margin-left: auto;
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: none;
+}
+
+.account-edit:hover {
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: underline;
+}
+
+/* pre-line so the paragraphs someone typed survive, without rendering markup */
+.account-review {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	line-height: 1.6;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.75));
+	white-space: pre-line;
+}
+
+.account-empty {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+</style>
+
+{% if not can_access_desk %}
+<style>
+/*
+ * The Desktop link is inherited markup, so it cannot be dropped from the page;
+ * hiding it takes it out of the accessibility tree as well as the layout.
+ */
+.portal-footer a[href="/desk"] {
+	display: none;
+}
+</style>
+{% endif %}
+{% endblock %}

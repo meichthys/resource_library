@@ -1,5 +1,6 @@
 {% extends "templates/web.html" %}
 {% from "templates/includes/resource_card.html" import resource_card %}
+{% from "templates/includes/star_rating.html" import star_rating %}
 
 {% block page_content %}
 <div class="resource-page">
@@ -23,7 +24,7 @@
 
 			{% if recommended %}
 			<div class="recommended-banner" title="Recommended">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v5a5 5 0 0 1-10 0V3z"/><path d="M11 13h2v4h-2z"/><path d="M8 17h8a1 1 0 0 1 1 1v2H7v-2a1 1 0 0 1 1-1z"/><path d="M7 5H5a2 2 0 0 0 0 4h1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M17 5h2a2 2 0 0 1 0 4h-1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
 				Recommended
 			</div>
 			{% endif %}
@@ -60,6 +61,18 @@
 
 			<!-- Title -->
 			<h1 class="app-title">{{ title }}</h1>
+
+			<!-- Rating -->
+			<a href="#reviews" class="app-rating">
+				{{ star_rating(average_rating, max_rating, "1.05rem") }}
+				<span class="app-rating-count">
+					{%- if rating_count -%}
+					{{ '%.1f' | format(average_rating) }} from {{ rating_count }} review{% if rating_count != 1 %}s{% endif %}
+					{%- else -%}
+					No reviews yet
+					{%- endif -%}
+				</span>
+			</a>
 
 			<!-- Description -->
 			<div class="app-description">{{ description | safe }}</div>
@@ -134,13 +147,76 @@
 		</details>
 		{% endif %}
 
+		<!-- Reviews -->
+		<div class="reviews-section" id="reviews">
+			<div class="reviews-head">
+				<h2 class="reviews-heading">Reviews</h2>
+				{% if rating_count %}
+				<div class="reviews-score">
+					{{ star_rating(average_rating, max_rating, "1rem") }}
+					<span class="reviews-average">{{ '%.1f' | format(average_rating) }}</span>
+					<span class="reviews-count">{{ rating_count }} review{% if rating_count != 1 %}s{% endif %}</span>
+				</div>
+				{% endif %}
+			</div>
+
+			{% if is_logged_in %}
+			<form class="review-form" id="review-form" data-resource="{{ resource_name }}">
+				<div class="review-form-head">
+					<span class="review-form-title">{% if my_review %}Your review{% else %}Leave a review{% endif %}</span>
+					{% if my_review and my_review.status != "Approved" %}
+					<span class="review-pending">Waiting for approval</span>
+					{% endif %}
+				</div>
+
+				<div class="star-input" role="radiogroup" aria-label="Your rating">
+					{% for value in range(1, max_rating + 1) %}
+					<button type="button" class="star-btn" data-value="{{ value }}" role="radio" aria-checked="false"
+						aria-label="{{ value }} star{% if value != 1 %}s{% endif %}" title="{{ value }} star{% if value != 1 %}s{% endif %}">
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+					</button>
+					{% endfor %}
+					<span class="star-input-hint">Click the star you picked to clear it.</span>
+				</div>
+
+				<input type="hidden" id="review-rating" value="{{ my_review.rating if my_review else 0 }}">
+				<textarea id="review-text" class="review-text" rows="4" maxlength="2000"
+					placeholder="What do you have to say about this resource?">{{ my_review.review if my_review else "" }}</textarea>
+
+				<div class="review-actions">
+					<button type="submit" class="review-submit">{% if my_review %}Update Review{% else %}Submit Review{% endif %}</button>
+					<span class="review-note" id="review-note">Reviews appear once an admin has approved them.</span>
+				</div>
+			</form>
+			{% else %}
+			<p class="review-signin"><a href="{{ login_url }}">Log in</a> to leave a review.</p>
+			{% endif %}
+
+			{% if reviews %}
+			<ul class="review-list">
+				{% for review in reviews %}
+				<li class="review-item">
+					<div class="review-item-head">
+						<span class="review-author">{{ review.author }}</span>
+						{{ star_rating(review.rating, max_rating, "0.85rem") }}
+						<span class="review-date">{{ review.posted_on }}</span>
+					</div>
+					<p class="review-body">{{ review.review }}</p>
+				</li>
+				{% endfor %}
+			</ul>
+			{% else %}
+			<p class="reviews-empty">Nobody has reviewed this yet.</p>
+			{% endif %}
+		</div>
+
 		<!-- Similar Resources -->
 		{% if similar_resources %}
 		<div class="similar-section">
 			<h2 class="similar-heading">Similar Resources</h2>
 			<div class="resources-grid">
 				{% for r in similar_resources %}
-				{{ resource_card(r, is_logged_in) }}
+				{{ resource_card(r) }}
 				{% endfor %}
 			</div>
 		</div>
@@ -223,15 +299,83 @@
 		});
 	});
 })();
+/* Review form: the stars write into a hidden input, and the whole thing is
+   posted through one whitelisted method that owns the approval status. */
+frappe.ready(function () {
+	var form = document.getElementById("review-form");
+	if (!form) return;
+
+	var ratingInput = document.getElementById("review-rating");
+	var textInput = document.getElementById("review-text");
+	var note = document.getElementById("review-note");
+	var submit = form.querySelector(".review-submit");
+	var buttons = Array.prototype.slice.call(form.querySelectorAll(".star-btn"));
+
+	function chosen() {
+		return parseInt(ratingInput.value, 10) || 0;
+	}
+
+	function paint(value) {
+		buttons.forEach(function (btn) {
+			var star = parseInt(btn.dataset.value, 10);
+			btn.classList.toggle("on", star <= value);
+			btn.setAttribute("aria-checked", star === chosen() ? "true" : "false");
+		});
+	}
+
+	buttons.forEach(function (btn) {
+		btn.addEventListener("click", function () {
+			var star = parseInt(btn.dataset.value, 10);
+			// Clicking the star already chosen clears it, which is the only way
+			// to reach a zero star rating when there are five stars to click.
+			ratingInput.value = star === chosen() ? 0 : star;
+			paint(chosen());
+		});
+
+		btn.addEventListener("mouseenter", function () {
+			paint(parseInt(btn.dataset.value, 10));
+		});
+	});
+
+	form.addEventListener("mouseleave", function () {
+		paint(chosen());
+	});
+
+	paint(chosen());
+
+	form.addEventListener("submit", function (e) {
+		e.preventDefault();
+		submit.disabled = true;
+
+		frappe.call({
+			method: "resource_library.resource_library.doctype.resource_review.resource_review.submit_review",
+			args: {
+				resource: form.dataset.resource,
+				rating: chosen(),
+				review: textInput.value,
+			},
+			callback: function (r) {
+				submit.disabled = false;
+				if (!r || r.exc) return;
+
+				submit.textContent = "Update Review";
+				if (note) note.textContent = "Thanks. Your review will appear once an admin has approved it.";
+			},
+			error: function () {
+				submit.disabled = false;
+			},
+		});
+	});
+});
 </script>
 
 <style>
 .back-link {
 	display: inline-flex;
 	align-items: center;
-	gap: 0.35rem;
-	font-size: 0.875rem;
-	font-weight: 500;
+	gap: 0.4rem;
+	font-size: 1.05rem;
+	font-weight: 600;
 	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
 	text-decoration: none;
 	margin-bottom: 1.25rem;
@@ -421,6 +565,233 @@
 	text-decoration: none;
 }
 
+/* Rating readout in the header card */
+.app-rating {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+	text-decoration: none;
+}
+
+.app-rating:hover {
+	text-decoration: none;
+}
+
+.app-rating-count {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.app-rating:hover .app-rating-count {
+	color: var(--rl-text, #f5f5f5);
+}
+
+/* Reviews */
+.reviews-section {
+	margin-top: 1.5rem;
+}
+
+.reviews-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 0.8rem;
+}
+
+.reviews-heading {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--rl-text, #f5f5f5);
+	margin: 0;
+}
+
+.reviews-score {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-size: 0.8rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.reviews-average {
+	font-weight: 700;
+	color: var(--rl-text, #f5f5f5);
+}
+
+.review-form {
+	background: var(--rl-bg-elevated, rgba(255, 255, 255, 0.08));
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	border-radius: 14px;
+	padding: 1.1rem 1.25rem;
+	margin-bottom: 1.25rem;
+}
+
+.review-form-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	margin-bottom: 0.6rem;
+}
+
+.review-form-title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: var(--rl-text, #f5f5f5);
+}
+
+.review-pending {
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 0.68rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: #2e1f08;
+	background: rgba(212, 169, 92, 0.92);
+}
+
+.star-input {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.15rem;
+	margin-bottom: 0.7rem;
+}
+
+.star-btn {
+	display: inline-flex;
+	padding: 2px;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	transition: color 0.15s;
+}
+
+.star-btn svg {
+	width: 1.4rem;
+	height: 1.4rem;
+}
+
+.star-btn.on {
+	color: #fbbf24;
+}
+
+.star-btn.on svg {
+	fill: currentColor;
+}
+
+.star-input-hint {
+	margin-left: 0.5rem;
+	font-size: 0.72rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.review-text {
+	display: block;
+	width: 100%;
+	padding: 0.7rem 0.9rem;
+	border-radius: 10px;
+	background: rgba(0, 0, 0, 0.2);
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	color: var(--rl-text, #f5f5f5);
+	font-size: 0.875rem;
+	line-height: 1.6;
+	resize: vertical;
+	outline: none;
+}
+
+.review-text:focus {
+	border-color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+}
+
+.review-actions {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+	margin-top: 0.7rem;
+}
+
+.review-submit {
+	padding: 0.45rem 1.1rem;
+	border-radius: 8px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	cursor: pointer;
+	background: transparent;
+	color: var(--rl-text, #f5f5f5);
+	border: 1px solid var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	transition: background 0.15s;
+}
+
+.review-submit:hover {
+	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.14));
+}
+
+.review-submit[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.review-note,
+.review-signin,
+.reviews-empty {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.review-list {
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	margin: 0 0 0.5rem;
+	padding: 0;
+}
+
+.review-item {
+	background: var(--rl-bg-elevated, #141414);
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	border-radius: 14px;
+	padding: 0.9rem 1.1rem;
+}
+
+.review-item-head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 0.4rem;
+}
+
+.review-author {
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--rl-text, #f5f5f5);
+}
+
+.review-date {
+	margin-left: auto;
+	font-size: 0.72rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+/* pre-line so the paragraphs someone typed survive, without rendering markup */
+.review-body {
+	margin: 0;
+	font-size: 0.875rem;
+	line-height: 1.6;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.75));
+	white-space: pre-line;
+}
+
 /* Similar Resources */
 .similar-section {
 	margin-top: 1.5rem;
@@ -435,17 +806,6 @@
 
 /* Similar Resources reuses .resources-grid and the shared card styles from
    resource_library.bundle.css, so only the section chrome lives here. */
-
-/* Three across leaves each card narrow, so the clearance for the favorite
-   badge moves off the whole card body and onto the title, the only row level
-   with the badge. Description and tags then run the full width of the card. */
-.similar-section .card-body {
-	padding-right: 0;
-}
-
-.similar-section .card-title {
-	padding-right: 3.25rem;
-}
 
 /* Title */
 .app-title {

@@ -91,10 +91,11 @@ page_renderer = ["resource_library.badge.BadgeRenderer"]
 # ----------
 
 # add methods and filters to jinja environment
-# jinja = {
-# 	"methods": "resource_library.utils.jinja_methods",
-# 	"filters": "resource_library.utils.jinja_filters"
-# }
+# The footer is a plain include with no page context of its own, so its totals
+# come from a jinja method rather than from every page's get_context.
+jinja = {
+	"methods": ["resource_library.stats.get_library_stats"],
+}
 
 # Installation
 # ------------

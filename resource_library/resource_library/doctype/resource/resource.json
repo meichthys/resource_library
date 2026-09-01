@@ -22,6 +22,8 @@
   "route",
   "published",
   "recommended",
+  "average_rating",
+  "rating_count",
   "software_details_section",
   "source_code_repository",
   "app_store_url",
@@ -161,6 +163,21 @@
    "fieldname": "icon",
    "fieldtype": "Attach Image",
    "label": "Icon"
+  },
+  {
+   "description": "Average of the approved reviews, out of 5. Maintained by Resource Review.",
+   "fieldname": "average_rating",
+   "fieldtype": "Float",
+   "label": "Average Rating",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "description": "Number of approved reviews. Maintained by Resource Review.",
+   "fieldname": "rating_count",
+   "fieldtype": "Int",
+   "label": "Review Count",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
@@ -170,7 +187,7 @@
  "is_published_field": "published",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-08-30 02:00:00.000000",
+ "modified": "2026-09-01 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource",

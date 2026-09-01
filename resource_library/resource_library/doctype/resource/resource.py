@@ -1,7 +1,6 @@
 # Copyright (c) 2026, Meichthys and contributors
 # For license information, please see license.txt
 
-import json
 import re
 from urllib.parse import quote
 
@@ -12,6 +11,11 @@ from frappe.utils.nestedset import get_ancestors_of
 from frappe.website.website_generator import WebsiteGenerator
 
 from resource_library.badge import BADGE_SIZE
+from resource_library.resource_library.doctype.resource_review.resource_review import (
+	MAX_RATING,
+	get_reviews,
+	get_user_review,
+)
 
 REPO_URL_PATTERN = re.compile(
 	r"^https?://(?:www\.)?(github\.com|gitlab\.com)/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$"
@@ -462,6 +466,17 @@ class Resource(WebsiteGenerator):
 
 		self.tags_input = ", ".join(row.tag for row in (self.tags or []))
 
+	def on_trash(self):
+		"""Take this resource's reviews with it.
+
+		A review holds a Link to the resource, so without this Frappe refuses to
+		delete anything anyone has reviewed.
+		"""
+		super().on_trash()
+
+		for name in frappe.get_all("Resource Review", filters={"resource": self.name}, pluck="name"):
+			frappe.delete_doc("Resource Review", name, ignore_permissions=True, force=True)
+
 	def get_context(self, context):
 		if self.category:
 			ancestors = get_ancestors_of("Category", self.category)
@@ -484,6 +499,18 @@ class Resource(WebsiteGenerator):
 		]
 		context.embed_variants = self.get_embed_variants()
 		context.similar_resources = self.get_similar_resources(approved)
+
+		# The review form posts against the docname, which the template cannot
+		# assume `name` still holds by the time the web context is built.
+		context.resource_name = self.name
+		context.max_rating = MAX_RATING
+		context.average_rating = self.average_rating or 0
+		context.rating_count = self.rating_count or 0
+		context.reviews = get_reviews(self.name)
+		# Shown back to its author whatever its status, so a review waiting for
+		# approval does not look like it was thrown away.
+		context.my_review = get_user_review(self.name)
+		context.login_url = f"/login?redirect-to={quote('/' + (self.route or ''))}"
 
 	def get_approved_tags(self):
 		"""This resource's tags that an admin has approved.
@@ -552,10 +579,17 @@ class Resource(WebsiteGenerator):
 		# and with the same approved-category rule the main listing applies, so a
 		# category set back to Pending takes its resources out of here too.
 		# Field list mirrors the main listing so the shared card macro renders.
-		fields = ["name", "title", "route", "description", "category", "icon", "recommended"]
-		has_likes_column = frappe.db.has_column("Resource", "_liked_by")
-		if has_likes_column:
-			fields.append("_liked_by")
+		fields = [
+			"name",
+			"title",
+			"route",
+			"description",
+			"category",
+			"icon",
+			"recommended",
+			"average_rating",
+			"rating_count",
+		]
 
 		matches = frappe.get_all(
 			"Resource",
@@ -569,13 +603,9 @@ class Resource(WebsiteGenerator):
 		matches.sort(key=lambda r: (-scores.get(r.name, 0), r.title))
 		matches = matches[:limit]
 
-		is_logged_in = frappe.session.user != "Guest"
 		tags_by_resource = get_tags_by_resource([r.name for r in matches])
 
 		for r in matches:
-			liked_by = json.loads(r.pop("_liked_by", None) or "[]")
-			r["favorite_count"] = len(liked_by)
-			r["is_favorited"] = is_logged_in and frappe.session.user in liked_by
 			r["tags"] = [
 				{"name": t, "url": f"/resources?tag={quote(t)}&recommended=0"}
 				for t in tags_by_resource.get(r.name, [])

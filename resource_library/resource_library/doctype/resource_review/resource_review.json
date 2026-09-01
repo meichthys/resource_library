@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "hash",
+ "creation": "2026-09-01 00:00:00.000000",
+ "description": "A star rating and written review left by a user on a resource",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "resource",
+  "user",
+  "column_break_score",
+  "rating",
+  "status",
+  "review_section",
+  "review"
+ ],
+ "fields": [
+  {
+   "fieldname": "resource",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Resource",
+   "options": "Resource",
+   "reqd": 1
+  },
+  {
+   "default": "__user",
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_score",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Whole stars, 0 to 5.",
+   "fieldname": "rating",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Rating"
+  },
+  {
+   "default": "Pending",
+   "description": "Reviews left by users stay Pending until an admin approves them. Only Approved reviews are shown on the public site or counted towards a resource's average rating.",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status",
+   "options": "Pending\nApproved",
+   "permlevel": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "review_section",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "review",
+   "fieldtype": "Small Text",
+   "label": "Review",
+   "reqd": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-09-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Resource Library",
+ "name": "Resource Review",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "permlevel": 1,
+   "read": 1,
+   "role": "System Manager",
+   "write": 1
+  },
+  {
+   "create": 1,
+   "read": 1,
+   "role": "All"
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "resource, user, rating",
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "resource",
+ "track_changes": 1
+}

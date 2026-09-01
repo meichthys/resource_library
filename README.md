@@ -23,7 +23,8 @@ A [Frappe](https://frappeframework.com/) app for collecting, curating and publis
 **Public site**
 
 - A searchable, filterable library of resources, grouped by a category tree and cross cut by tags.
-- Favourites and a curated "Recommended" flag, both usable as filters.
+- Five star reviews from signed in users, with a "Top Rated" filter and a "Highest Rated" sort over the average.
+- A curated "Recommended" flag, usable as a filter.
 - Similar resources on every listing, ranked by shared tags first and category proximity second.
 - Embeddable "Recommended on Freely.Giving" badges, generated on demand so they stop working the moment a resource is unpublished.
 
@@ -32,10 +33,12 @@ A [Frappe](https://frappeframework.com/) app for collecting, curating and publis
 - Anyone signed in can submit a resource, and see their own submissions with their approval status.
 - Submitters can request tags and categories that do not exist yet. A requested category can be filed under an existing one and marked as able to hold subcategories.
 - Requests stay pending until an admin approves them. Nothing pending appears on the public site, and a resource cannot be published while its category is unapproved.
+- Reviews are held the same way: a review is visible to nobody but its author, and counts towards nothing, until an admin approves it. Editing an approved review sends it back for approval.
+- The account page (`/me`) lists everything a user has submitted and every review they have left, each with its approval status, so pending work is visible to its author and nobody else.
 
 **Administration**
 
-- A workspace with review queues: total and pending counts for resources, categories and tags.
+- A workspace with review queues: total and pending counts for resources, categories, tags and reviews.
 - Ownership transfer, so a resource an admin filed on someone's behalf can be handed to the person it belongs to.
 - Software resources carry repository and app store fields, required and shown only for categories in the Software branch.
 

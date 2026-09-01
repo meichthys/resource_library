@@ -40,37 +40,4 @@ frappe.ready(function () {
 			if (el.dataset.url) window.location.href = el.dataset.url;
 		});
 	});
-
-	/* Favourite toggle. The button only renders as .interactive for logged-in
-	   users, so no extra auth check is needed here. */
-	document.querySelectorAll(".favorite-btn.interactive").forEach(function (btn) {
-		btn.addEventListener("click", function (e) {
-			e.preventDefault();
-			e.stopPropagation();
-
-			var wasFavorited = btn.classList.contains("favorited");
-			var countEl = btn.querySelector(".favorite-count");
-			var count = parseInt(countEl.textContent, 10) || 0;
-
-			frappe.call({
-				method: "frappe.desk.like.toggle_like",
-				args: {
-					doctype: "Resource",
-					name: btn.dataset.resource,
-					add: wasFavorited ? "No" : "Yes",
-				},
-				callback: function () {
-					btn.classList.toggle("favorited", !wasFavorited);
-					btn.querySelector("svg").setAttribute("fill", wasFavorited ? "none" : "currentColor");
-					countEl.textContent = wasFavorited ? Math.max(0, count - 1) : count + 1;
-
-					// Unfavouriting while the favourites filter is on should drop
-					// the card, since it no longer matches the active filter.
-					var card = btn.closest(".resource-card");
-					var grid = card && card.closest("[data-favorites-view='1']");
-					if (grid && wasFavorited) card.remove();
-				},
-			});
-		});
-	});
 });

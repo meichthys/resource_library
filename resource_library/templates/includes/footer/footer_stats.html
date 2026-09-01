@@ -1,0 +1,19 @@
+{#
+	Library totals, included from the footer's info row so they sit on the same
+	line as the "Built on Frappe" note rather than in the banded logo strip
+	above it. Each number links to the listing that shows it.
+#}
+{%- set stats = get_library_stats() -%}
+<div class="rl-footer-stats">
+	<a href="/resources?recommended=0">
+		<strong>{{ stats.resources }}</strong> resource{% if stats.resources != 1 %}s{% endif %}
+	</a>
+	<span class="rl-footer-sep">·</span>
+	<a href="/resources">
+		<strong>{{ stats.recommended }}</strong> recommended
+	</a>
+	<span class="rl-footer-sep">·</span>
+	<a href="/resources?sort=rating&recommended=0">
+		<strong>{{ stats.reviews }}</strong> review{% if stats.reviews != 1 %}s{% endif %}
+	</a>
+</div>

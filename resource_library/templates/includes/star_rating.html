@@ -1,0 +1,24 @@
+{#
+	Star rating display, shared by the detail page's rating summary and by each
+	individual review, so a score reads the same wherever it appears.
+
+	Drawn as two rows of stars, hollow underneath and gold on top, with the gold
+	row clipped to the score. A single element per star can only be on or off,
+	and an average lands between two whole stars more often than not.
+
+	The rows sit on one line in the markup on purpose: a newline between them
+	would be a text node inside an inline-block, and would widen the row.
+#}
+{%- macro star_icon() -%}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+{%- endmacro -%}
+
+{%- macro star_row(max, css_class) -%}
+<span class="star-row {{ css_class }}" aria-hidden="true">{% for i in range(max) %}{{ star_icon() }}{% endfor %}</span>
+{%- endmacro -%}
+
+{%- macro star_rating(value, max=5, size="1em", label=None) -%}
+{%- set score = value or 0 -%}
+{%- set caption = label or ("%.1f out of %d stars" % (score, max)) -%}
+<span class="star-rating" style="--star-fill: {{ (score / max * 100) | round(1) }}%; --star-size: {{ size }}" title="{{ caption }}">{{ star_row(max, "star-row-empty") }}{{ star_row(max, "star-row-full") }}<span class="sr-only">{{ caption }}</span></span>
+{%- endmacro -%}
