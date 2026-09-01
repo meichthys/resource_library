@@ -292,7 +292,8 @@
 }
 
 .resource-container {
-	max-width: 680px;
+	/* Wide enough for three 280px similar-resource cards plus their 1.25rem gaps */
+	max-width: 920px;
 }
 
 .resource-detail-card {
@@ -394,6 +395,7 @@
 
 /* Tags */
 .app-tags {
+	align-self: stretch;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
@@ -434,6 +436,17 @@
 /* Similar Resources reuses .resources-grid and the shared card styles from
    resource_library.bundle.css, so only the section chrome lives here. */
 
+/* Three across leaves each card narrow, so the clearance for the favorite
+   badge moves off the whole card body and onto the title, the only row level
+   with the badge. Description and tags then run the full width of the card. */
+.similar-section .card-body {
+	padding-right: 0;
+}
+
+.similar-section .card-title {
+	padding-right: 3.25rem;
+}
+
 /* Title */
 .app-title {
 	font-size: 1.9rem;
@@ -445,10 +458,11 @@
 
 /* Description (rich text) */
 .app-description {
+	/* The card centers its children, so stretch to fill its width */
+	align-self: stretch;
 	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
 	font-size: 1rem;
 	line-height: 1.7;
-	max-width: 520px;
 	margin: 0 0 1.75rem 0;
 	text-align: left;
 }
