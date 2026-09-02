@@ -1,18 +1,40 @@
 /**
- * Fields that only apply to software resources. The desk form keeps these in a
- * "Software Details" section it shows or hides as a unit (see resource.js);
- * Web Forms have no sections, so the same rule is applied field by field here.
+ * Conditional field groups, and the fixed vocabularies behind the pill pickers.
+ *
+ * Both come from CATEGORY_SECTIONS and MULTI_VALUE_FIELDS on the server, which
+ * is also what Resource.validate enforces and what the desk form drives its own
+ * sections off, so the three cannot drift apart. The desk form keeps each group
+ * in a section it shows or hides as a unit; Web Forms have no sections, so the
+ * same rule is applied field by field here.
  */
-const SOFTWARE_FIELDS = ["source_code_repository", "app_store_url"];
+let sections = {};
+let vocabularies = {};
+
+/** Every field belonging to some conditional group, flattened. */
+function conditional_fields() {
+	return Object.keys(sections).reduce(function (all, branch) {
+		return all.concat(sections[branch].fields || []);
+	}, []);
+}
 
 frappe.ready(function () {
-	if (in_view_mode()) {
-		setup_view_mode();
-		return;
-	}
+	frappe.call({
+		method: "resource_library.resource_library.doctype.resource.resource.get_field_options",
+		callback: function (r) {
+			const options = r.message || {};
+			sections = options.sections || {};
+			vocabularies = options.multi_value || {};
 
-	setup_category_picker();
-	setup_tag_picker();
+			if (in_view_mode()) {
+				setup_view_mode();
+				return;
+			}
+
+			setup_multi_pickers();
+			setup_category_picker();
+			setup_tag_picker();
+		},
+	});
 });
 
 /**
@@ -52,11 +74,11 @@ function setup_view_mode() {
 		field.refresh();
 	});
 
-	// How a category was requested is not part of the resource, and the
-	// software only fields only apply when there is something in them.
+	// How a category was requested is not part of the resource, and a
+	// category-specific field only applies when there is something in it.
 	const doc = web_form.doc || {};
 	const conditional = ["category_parent_input", "category_is_group_input"].concat(
-		SOFTWARE_FIELDS.filter((fieldname) => !doc[fieldname])
+		conditional_fields().filter((fieldname) => !doc[fieldname])
 	);
 
 	conditional.forEach(function (fieldname) {
@@ -105,16 +127,16 @@ function setup_category_picker() {
 	const field = web_form.fields_dict.category_input;
 	if (!field || !field.$wrapper) return;
 
-	// Placement only applies to a new category, and the software only fields
-	// only to a software one. Nothing is named yet, so keep both sets out of
+	// Placement only applies to a new category, and a category-specific field
+	// only to its own branch. Nothing is named yet, so keep both sets out of
 	// the way rather than letting them flash in and back out while the approved
 	// category list is still being fetched.
-	["category_parent_input", "category_is_group_input", ...SOFTWARE_FIELDS].forEach(
-		function (fieldname) {
+	["category_parent_input", "category_is_group_input"]
+		.concat(conditional_fields())
+		.forEach(function (fieldname) {
 			const conditional_field = web_form.fields_dict[fieldname];
 			if (conditional_field) conditional_field.toggle(false);
-		}
-	);
+		});
 
 	frappe.call({
 		method: "resource_library.resource_library.doctype.resource.resource.get_category_options",
@@ -207,7 +229,7 @@ function build_category_picker(field, options) {
 			allow_new: false,
 			on_change: function () {
 				const value = (field.get_value() || "").trim();
-				toggle_software_details(value, !!value && !approved_lookup.has(value.toLowerCase()));
+				toggle_category_fields(value, !!value && !approved_lookup.has(value.toLowerCase()));
 				render_note();
 			},
 		});
@@ -230,34 +252,41 @@ function build_category_picker(field, options) {
 			if (parent_field) parent_field.toggle(is_new);
 			if (is_group_field) is_group_field.toggle(is_new);
 
-			toggle_software_details(value, is_new);
+			toggle_category_fields(value, is_new);
 			render_note();
 		},
 	});
 
 	/**
-	 * Show the software only fields when the chosen category sits anywhere in
-	 * the Software branch, matching what the desk form does.
+	 * Show each group's fields when the chosen category sits anywhere in that
+	 * group's branch, matching what the desk form does.
 	 *
 	 * A category being requested does not exist yet, so it has no branch of its
 	 * own; it inherits the parent it is being filed under, which is also what
 	 * the server sees once it has created the category and reaches the same
 	 * check in Resource.validate.
 	 */
-	function toggle_software_details(value, is_new) {
+	function toggle_category_fields(value, is_new) {
 		const parent = parent_field ? (parent_field.get_value() || "").trim() : "";
 		const decides = is_new ? parent : value;
 		const option = decides ? approved_lookup.get(decides.toLowerCase()) : null;
-		const is_software = !!(option && option.in_software);
+		const branches = (option && option.branches) || [];
 
-		// Mirrors the Software rule the server enforces in Resource.validate,
-		// so the form reports it before a round trip rather than after.
-		const repo_field = web_form.fields_dict.source_code_repository;
-		if (repo_field) repo_field.df.reqd = is_software ? 1 : 0;
+		Object.keys(sections).forEach(function (branch) {
+			const spec = sections[branch];
+			const on = branches.indexOf(branch) !== -1;
 
-		SOFTWARE_FIELDS.forEach(function (fieldname) {
-			const software_field = web_form.fields_dict[fieldname];
-			if (software_field) software_field.toggle(is_software);
+			(spec.fields || []).forEach(function (fieldname) {
+				const conditional_field = web_form.fields_dict[fieldname];
+				if (conditional_field) conditional_field.toggle(on);
+			});
+
+			// Mirrors the rule the server enforces in Resource.validate, so the
+			// form reports it before a round trip rather than after.
+			(spec.required || []).forEach(function (fieldname) {
+				const required_field = web_form.fields_dict[fieldname];
+				if (required_field) required_field.df.reqd = on ? 1 : 0;
+			});
 		});
 	}
 
@@ -290,6 +319,81 @@ function build_category_picker(field, options) {
 	category_picker.seed();
 
 	category_picker.commit();
+}
+
+/**
+ * Drive the fixed-vocabulary fields (formats, styles) with pill pickers.
+ *
+ * Same storage as the tag picker below, a comma separated string, but no
+ * approval note and no typed values: these lists are code constants on the
+ * server, which drops anything not on them in Resource.normalize_multi_values.
+ * Offering only what is on the list is what keeps that from silently eating
+ * someone's input.
+ */
+function setup_multi_pickers() {
+	const web_form = frappe.web_form;
+	if (!web_form || !web_form.fields_dict) return;
+
+	Object.keys(vocabularies).forEach(function (fieldname) {
+		const field = web_form.fields_dict[fieldname];
+		if (field && field.$wrapper) {
+			build_pill_picker(field, vocabularies[fieldname]);
+		}
+	});
+}
+
+function build_pill_picker(field, choices) {
+	const $input_wrapper = field.$wrapper.find(".control-input-wrapper");
+	$input_wrapper.hide();
+
+	const $host = $('<div class="rl-pill-picker"></div>').insertAfter($input_wrapper);
+
+	const control = frappe.ui.form.make_control({
+		df: {
+			fieldtype: "MultiSelectPills",
+			fieldname: `rl_${field.df.fieldname}_picker`,
+			placeholder: __("Select one or more"),
+			get_data: function () {
+				return choices.map((choice) => ({ value: choice, label: choice }));
+			},
+			change: function () {
+				sync();
+			},
+		},
+		parent: $host,
+		render_input: true,
+		only_input: true,
+	});
+
+	function sync() {
+		const rows = control.get_value();
+		const text = (Array.isArray(rows) ? rows.filter(Boolean) : []).join(", ");
+
+		// Write straight to the input rather than field.set_value(): set_value
+		// calls set_input(), which re-renders the field and would destroy the
+		// picker we injected into it.
+		field.value = text;
+		if (field.$input) field.$input.val(text);
+	}
+
+	control.$input.on("awesomplete-selectcomplete", function () {
+		setTimeout(sync, 0);
+	});
+
+	// Removing a pill mutates rows directly, so re-sync after the click settles
+	$host.on("click", ".btn-remove", function () {
+		setTimeout(sync, 0);
+	});
+
+	// Seed from an existing submission being edited
+	const initial = String(field.get_value() || "")
+		.split(",")
+		.map((part) => part.trim())
+		.filter(Boolean);
+
+	if (initial.length) control.set_value(initial);
+
+	sync();
 }
 
 /**

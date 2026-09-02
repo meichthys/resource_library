@@ -24,7 +24,9 @@ add_to_apps_screen = [
 # ------------------
 
 fixtures = [
-	{"doctype": "Category", "filters": [["category", "=", "Software"]]},
+	# The branches CATEGORY_SECTIONS keys its conditional fields off. Without
+	# these a fresh site has no category that turns those sections on.
+	{"doctype": "Category", "filters": [["category", "in", ["Software", "Books", "Music"]]]},
 ]
 
 # Includes in <head>

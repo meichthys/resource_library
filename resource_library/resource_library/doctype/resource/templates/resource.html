@@ -78,8 +78,22 @@
 			<div class="app-description">{{ description | safe }}</div>
 
 			<!-- Actions -->
-			{% if app_store_url or website or source_code_repository %}
+			{% if app_store_url or website or source_code_repository or streaming_url or download_url %}
 			<div class="app-actions">
+				{% if streaming_url %}
+				<a href="{{ streaming_url }}" class="action-btn btn-listen" target="_blank" rel="noopener noreferrer">
+					<!-- Play icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
+					Listen
+				</a>
+				{% endif %}
+				{% if download_url %}
+				<a href="{{ download_url }}" class="action-btn btn-download" target="_blank" rel="noopener noreferrer">
+					<!-- Download icon -->
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+					Download
+				</a>
+				{% endif %}
 				{% if app_store_url %}
 				<a href="{{ app_store_url }}" class="action-btn btn-get-app" target="_blank" rel="noopener noreferrer">
 					<!-- Download/store icon -->
@@ -102,6 +116,47 @@
 				</a>
 				{% endif %}
 			</div>
+			{% endif %}
+
+			{#
+				Licence, formats, languages and catalogue size. Built server side
+				(Resource.get_detail_specs) so only what is filled in appears:
+				a sparse resource gets a short block rather than a table of
+				dashes. The licence row leads because it is the one thing this
+				site exists to report.
+			#}
+			{% if specs %}
+			<dl class="app-specs">
+				{% for spec in specs %}
+				<div class="spec-row">
+					<dt class="spec-label">{{ spec.label }}</dt>
+					<dd class="spec-value">
+						{% if spec.chips %}
+						{% for value in spec.chips %}
+						<span class="spec-chip">{{ value }}</span>
+						{% endfor %}
+						{% elif spec.is_license %}
+						<span class="spec-license {% if license_is_open %}is-open{% else %}is-limited{% endif %}">
+							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/>{% if license_is_open %}<path d="M8 11V7a4 4 0 0 1 7.5-2"/>{% else %}<path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% endif %}</svg>
+							{{ spec.value }}
+						</span>
+						{% if spec.url %}
+						<a href="{{ spec.url }}" class="spec-link" target="_blank" rel="noopener noreferrer">Terms</a>
+						{% endif %}
+						<span class="spec-note">
+							{%- if license_is_open -%}
+							Free to adapt, translate and redistribute
+							{%- else -%}
+							Free of charge, but restricted
+							{%- endif -%}
+						</span>
+						{% else %}
+						{{ spec.value }}
+						{% endif %}
+					</dd>
+				</div>
+				{% endfor %}
+			</dl>
 			{% endif %}
 
 			<!-- Badges -->
@@ -835,6 +890,103 @@ frappe.ready(function () {
 	justify-content: center;
 }
 
+/*
+ * Specification block: licence, formats, styles, languages, size, access.
+ * A label column wide enough for the longest label and no wider, so the values
+ * line up without the block turning into a table with visible rulings.
+ */
+.app-specs {
+	align-self: stretch;
+	display: grid;
+	gap: 0.6rem;
+	margin: 1.75rem 0 0 0;
+	padding-top: 1.5rem;
+	border-top: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	text-align: left;
+}
+
+.spec-row {
+	display: grid;
+	grid-template-columns: 6.5rem minmax(0, 1fr);
+	align-items: baseline;
+	gap: 0.75rem;
+}
+
+.spec-label {
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+	margin: 0;
+}
+
+.spec-value {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.35rem;
+	margin: 0;
+	font-size: 0.9rem;
+	color: var(--rl-text, #f5f5f5);
+	font-variant-numeric: tabular-nums;
+}
+
+.spec-chip {
+	display: inline-block;
+	padding: 2px 9px;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+}
+
+/* Same green/amber split the cards use, at the detail page's larger size */
+.spec-license {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	padding: 2px 10px 3px;
+	border-radius: 999px;
+	font-size: 0.78rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.spec-license svg {
+	width: 12px;
+	height: 12px;
+	flex-shrink: 0;
+}
+
+.spec-license.is-open {
+	background: rgba(52, 211, 153, 0.18);
+	border: 1px solid rgba(52, 211, 153, 0.45);
+	color: #6ee7b7;
+}
+
+.spec-license.is-limited {
+	background: rgba(251, 191, 36, 0.16);
+	border: 1px solid rgba(251, 191, 36, 0.42);
+	color: #fcd34d;
+}
+
+.spec-note {
+	font-size: 0.78rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.spec-link {
+	font-size: 0.78rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+	text-decoration: underline;
+}
+
+.spec-link:hover {
+	color: var(--rl-text, #f5f5f5);
+}
+
 /* Repo badges (shields.io) */
 .app-badges {
 	display: flex;
@@ -1024,6 +1176,12 @@ frappe.ready(function () {
 
 	.action-btn {
 		width: 100%;
+	}
+
+	/* Not enough width for a label column beside the values */
+	.spec-row {
+		grid-template-columns: 1fr;
+		gap: 0.25rem;
 	}
 }
 </style>

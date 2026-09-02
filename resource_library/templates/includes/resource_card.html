@@ -30,23 +30,68 @@
 		<span class="rating-value">{% if rated %}{{ '%.1f' | format(r.average_rating) }}{% else %}&ndash;{% endif %}</span>
 	</span>
 
-	{% if r.icon %}
-	<img src="{{ r.icon }}" alt="{{ r.title }}" class="card-icon">
-	{% else %}
-	<div class="card-icon card-icon-placeholder">{{ r.title[0] | upper }}</div>
-	{% endif %}
+	<div class="card-head">
+		{% if r.icon %}
+		<img src="{{ r.icon }}" alt="{{ r.title }}" class="card-icon">
+		{% else %}
+		<div class="card-icon card-icon-placeholder">{{ r.title[0] | upper }}</div>
+		{% endif %}
+
+		<div class="card-heading">
+			<div class="card-title">{{ r.title }}</div>
+			{#
+				Just the category itself. The full chain up to the root is the
+				listing page's job, where there is room to read it; a card only
+				has to say what this resource is.
+			#}
+			{% if r.category %}
+			<span class="card-cat" data-category="{{ r.category }}">{{ r.category }}</span>
+			{% endif %}
+		</div>
+	</div>
 
 	<div class="card-body">
-		<div class="card-title">{{ r.title }}</div>
-		{% if r.category %}
-		<span class="card-cat" data-category="{{ r.category }}">{{ r.category }}</span>
-		{% endif %}
 		<div class="card-desc">{{ r.description | striptags | truncate(110) }}</div>
+		{#
+			Formats and catalogue size, only for resources that record either.
+			The card already carries a banner, a rating, a category pill and a
+			tag row, so this stays to a single line; the rest of the format
+			detail lives on the listing page.
+		#}
+		{% if r.facts and (r.facts.formats or r.facts.count_label) %}
+		<div class="card-facts">
+			{% if r.facts.formats %}
+			<span class="card-formats">
+				{{ r.facts.formats | join(" · ") }}{% if r.facts.formats_extra %} +{{ r.facts.formats_extra }}{% endif %}
+			</span>
+			{% endif %}
+			{% if r.facts.count_label %}
+			{% if r.facts.formats %}<span class="card-facts-sep">·</span>{% endif %}
+			<span class="card-count">{{ r.facts.count_label }}</span>
+			{% endif %}
+		</div>
+		{% endif %}
 		{% if r.tags %}
 		<div class="card-tags">
 			{% for tag in r.tags %}
 			<span class="card-tag" data-url="{{ tag.url }}">{{ tag.name }}</span>
 			{% endfor %}
+		</div>
+		{% endif %}
+		{#
+			The licence closes the card, centred under a hairline. Deliberately
+			uncoloured: on a grid of cards a row of green and amber pills reads
+			as a status alert, and the licence is context rather than a warning.
+			The padlock still opens or closes with the terms, so the open/closed
+			distinction survives losing the colour.
+		#}
+		{% if r.facts and r.facts.license %}
+		<div class="card-license-row">
+			<span class="card-license"
+				title="{% if r.facts.license_is_open %}Free to adapt, translate and redistribute{% else %}Free of charge, but restricted{% endif %}">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/>{% if r.facts.license_is_open %}<path d="M8 11V7a4 4 0 0 1 7.5-2"/>{% else %}<path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% endif %}</svg>
+				{{ r.facts.license }}
+			</span>
 		</div>
 		{% endif %}
 	</div>

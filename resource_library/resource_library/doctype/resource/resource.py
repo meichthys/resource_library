@@ -7,7 +7,6 @@ from urllib.parse import quote
 import frappe
 from frappe import _
 from frappe.utils import cint, get_url
-from frappe.utils.nestedset import get_ancestors_of
 from frappe.website.website_generator import WebsiteGenerator
 
 from resource_library.badge import BADGE_SIZE
@@ -21,10 +20,156 @@ REPO_URL_PATTERN = re.compile(
 	r"^https?://(?:www\.)?(github\.com|gitlab\.com)/([^/\s]+)/([^/\s]+?)(?:\.git)?/?$"
 )
 
-# Resources anywhere in this branch of the tree are software, so they carry the
-# repository and app store fields and must name a repository. The desk form and
-# the public submission form both key their field visibility off this.
-SOFTWARE_CATEGORY = "Software"
+# Category branches that bring extra fields with them. A resource filed
+# anywhere inside one of these branches carries that branch's fields, must fill
+# in anything listed as required, and has every other branch's fields cleared on
+# save. The desk form and the public submission form both drive their field
+# visibility off this same map, so the three stay in step by construction.
+CATEGORY_SECTIONS = {
+	"Software": {
+		"section": "software_details_section",
+		"fields": ["source_code_repository", "app_store_url"],
+		"required": ["source_code_repository"],
+	},
+	"Books": {
+		"section": "book_details_section",
+		"fields": ["book_formats", "title_count"],
+		"required": [],
+	},
+	"Music": {
+		"section": "music_details_section",
+		"fields": ["music_formats", "music_styles", "track_count", "streaming_url"],
+		"required": [],
+	},
+}
+
+# Fixed vocabularies for the comma separated multi-value fields. These are
+# developer-defined rather than records an admin curates, which is why they live
+# here and not in a doctype: adding a format is a code change, not data entry.
+BOOK_FORMATS = [
+	"EPUB",
+	"PDF",
+	"MOBI/Kindle",
+	"HTML",
+	"Plain text",
+	"Audiobook",
+	"Source files",
+]
+
+MUSIC_FORMATS = [
+	"Audio",
+	"Sheet music",
+	"Lead sheets",
+	"Chord charts",
+	"Lyrics",
+	"MIDI",
+	"Notation source",
+	"Stems/multitracks",
+	"Video",
+]
+
+MUSIC_STYLES = [
+	"Hymns",
+	"Contemporary worship",
+	"Metrical psalms",
+	"Gospel",
+	"Choral",
+	"Instrumental",
+	"Children's",
+	"Scripture songs",
+]
+
+# Fields whose value is a comma separated selection from a fixed list above.
+# Anything not on the list is dropped on save, so a hand-typed value cannot
+# quietly become a one-off format nobody else uses.
+MULTI_VALUE_FIELDS = {
+	"book_formats": BOOK_FORMATS,
+	"music_formats": MUSIC_FORMATS,
+	"music_styles": MUSIC_STYLES,
+}
+
+# Licenses that let someone adapt, translate and redistribute the work, which is
+# the distinction this site exists to draw.
+#
+# The Creative Commons entries here are exactly the ones Creative Commons itself
+# approves for Free Cultural Works: NC and ND are free of charge but not free of
+# restriction, so they deliberately fall outside, and so does "Free with
+# conditions", the bucket for a resource given away under its own bespoke terms.
+# That last case turns out to be the common one among ministry websites, which
+# routinely give everything away while forbidding redistribution.
+OPEN_LICENSES = {
+	"Public Domain",
+	"CC0",
+	"CC BY",
+	"CC BY-SA",
+	"MIT",
+	"Apache-2.0",
+	"GPL-2.0",
+	"GPL-3.0",
+	"Other open license",
+}
+
+# Formats named on a card before the rest roll up into a "+n" marker. The card
+# already carries a banner, a rating, a category pill and a tag row, so this
+# stays deliberately tight.
+CARD_FORMAT_LIMIT = 3
+
+
+def split_multi(raw):
+	"""Comma separated field to a list, blanks and duplicates removed."""
+	values = []
+	seen = set()
+	for part in (raw or "").split(","):
+		label = part.strip()
+		if label and label.lower() not in seen:
+			seen.add(label.lower())
+			values.append(label)
+	return values
+
+
+def is_open_license(license_name):
+	return (license_name or "") in OPEN_LICENSES
+
+
+# Fields a resource card needs beyond the listing's own, so the facts row can be
+# built without a second query per card.
+CARD_FACT_FIELDS = [
+	"license",
+	"book_formats",
+	"music_formats",
+	"title_count",
+	"track_count",
+]
+
+
+def build_card_facts(row):
+	"""The licence / formats / size line on a resource card.
+
+	Returns None when the resource has none of it, so the template skips the
+	markup rather than drawing an empty strip under the description.
+	"""
+	license_name = row.get("license")
+	formats = split_multi(row.get("book_formats")) or split_multi(row.get("music_formats"))
+
+	titles = cint(row.get("title_count"))
+	tracks = cint(row.get("track_count"))
+	count = titles or tracks
+
+	if not (license_name or formats or count):
+		return None
+
+	count_label = ""
+	if count:
+		singular, plural = ("title", "titles") if titles else ("track", "tracks")
+		count_label = f"{count:,} {singular if count == 1 else plural}"
+
+	return {
+		"license": license_name,
+		"license_is_open": is_open_license(license_name),
+		"formats": formats[:CARD_FORMAT_LIMIT],
+		"formats_extra": max(len(formats) - CARD_FORMAT_LIMIT, 0),
+		"count_label": count_label,
+	}
 
 
 def get_repo_badges(repo_url):
@@ -185,10 +330,11 @@ def get_category_options():
 
 	Each option carries its full root-to-leaf path as the label, so a flat
 	dropdown still reads as a tree; `is_group`, since only a group category can
-	be asked for as the parent of a new one; and `in_software`, so the form can
-	show the software only fields without a round trip per category change.
-	Pending categories are left out for the same reason pending tags are: a
-	request from another user should not look like an established option.
+	be asked for as the parent of a new one; and `branches`, the CATEGORY_SECTIONS
+	keys this category sits under, so the form can show the right conditional
+	fields without a round trip per category change. Pending categories are left
+	out for the same reason pending tags are: a request from another user should
+	not look like an established option.
 
 	Ancestry comes from walking parent_category rather than ordering on
 	lft/rgt, for the same reason get_category_path does: the nested-set
@@ -218,12 +364,26 @@ def get_category_options():
 				"value": row.name,
 				"label": " > ".join(reversed(chain)),
 				"is_group": cint(row.is_group),
-				"in_software": int(SOFTWARE_CATEGORY in chain),
+				"branches": [branch for branch in CATEGORY_SECTIONS if branch in chain],
 			}
 		)
 
 	options.sort(key=lambda option: option["label"])
 	return options
+
+
+@frappe.whitelist()
+def get_field_options():
+	"""Vocabularies for the fixed multi-value pickers, plus the section map.
+
+	Both forms build the same pill pickers and apply the same show/hide rule, so
+	they read the shapes from here rather than each keeping their own copy that
+	can drift out of step with the server that validates against it.
+	"""
+	return {
+		"multi_value": MULTI_VALUE_FIELDS,
+		"sections": CATEGORY_SECTIONS,
+	}
 
 
 def resolve_category_name(raw, parent=None, is_group=0):
@@ -388,13 +548,74 @@ def category_in_group(category, group):
 	return False
 
 
+def get_category_branches(category):
+	"""CATEGORY_SECTIONS keys whose branch contains `category`."""
+	return [branch for branch in CATEGORY_SECTIONS if category_in_group(category, branch)]
+
+
+@frappe.whitelist()
+def get_category_sections(category):
+	"""Which conditional sections a category turns on, for the desk form.
+
+	One call rather than one per branch, and it keeps the branch names on the
+	server: the form asks what to show, not whether a particular branch matched.
+	"""
+	return get_category_branches(category)
+
+
 class Resource(WebsiteGenerator):
 	def validate(self):
 		self.sync_category()
-		if category_in_group(self.category, SOFTWARE_CATEGORY) and not self.source_code_repository:
-			frappe.throw(_("Source Code Repository is required for Software resources"))
+		self.apply_category_sections()
 		self.sync_tags()
 		self.validate_category_approved()
+
+	def apply_category_sections(self):
+		"""Hold the conditional fields to the category they hang off.
+
+		Fields belonging to a branch this resource is not in are cleared rather
+		than left behind. A resource moved from Books to Software would
+		otherwise keep a title count no form still shows, and it would surface
+		again on the public card as though it meant something.
+		"""
+		branches = get_category_branches(self.category)
+
+		applicable = set()
+		for branch in branches:
+			applicable.update(CATEGORY_SECTIONS[branch]["fields"])
+
+		for spec in CATEGORY_SECTIONS.values():
+			for fieldname in spec["fields"]:
+				if fieldname in applicable:
+					continue
+				df = self.meta.get_field(fieldname)
+				self.set(fieldname, 0 if df and df.fieldtype in ("Check", "Int") else None)
+
+		self.normalize_multi_values()
+
+		for branch in branches:
+			for fieldname in CATEGORY_SECTIONS[branch]["required"]:
+				if not self.get(fieldname):
+					frappe.throw(
+						_("{0} is required for {1} resources").format(
+							_(self.meta.get_label(fieldname)), _(branch)
+						)
+					)
+
+	def normalize_multi_values(self):
+		"""Hold each comma separated selection to its fixed vocabulary.
+
+		Anything off the list is dropped rather than kept, so a typo in the
+		picker cannot become a one-off format that renders on a card and matches
+		nothing else on the site.
+		"""
+		for fieldname, allowed in MULTI_VALUE_FIELDS.items():
+			raw = self.get(fieldname)
+			if not raw:
+				continue
+			lookup = {value.lower(): value for value in allowed}
+			kept = [lookup[label.lower()] for label in split_multi(raw) if label.lower() in lookup]
+			self.set(fieldname, ", ".join(kept))
 
 	def sync_category(self):
 		"""Keep the Category link and its plain text mirror in step.
@@ -478,17 +699,19 @@ class Resource(WebsiteGenerator):
 			frappe.delete_doc("Resource Review", name, ignore_permissions=True, force=True)
 
 	def get_context(self, context):
-		if self.category:
-			ancestors = get_ancestors_of("Category", self.category)
-			context.category_path = [*ancestors, self.category]
-		else:
-			context.category_path = []
+		# get_category_path rather than get_ancestors_of: the nested set
+		# boundaries on this site have repeatedly drifted out of sync after
+		# ordinary edits, and this breadcrumb is the whole of what tells a
+		# visitor where in the tree they are.
+		context.category_path = get_category_path(self.category) if self.category else []
 
 		context.is_logged_in = frappe.session.user != "Guest"
 		context.can_edit = context.is_logged_in and self.has_permission("write")
 		context.edit_url = f"/submit-resource/{self.name}"
 		context.badges = get_repo_badges(self.source_code_repository)
 		context.recommended = self.recommended
+		context.specs = self.get_detail_specs()
+		context.license_is_open = is_open_license(self.license)
 
 		from_category = frappe.form_dict.get("from_category")
 		context.back_url = f"/resources?category={quote(from_category)}" if from_category else "/resources"
@@ -511,6 +734,47 @@ class Resource(WebsiteGenerator):
 		# approval does not look like it was thrown away.
 		context.my_review = get_user_review(self.name)
 		context.login_url = f"/login?redirect-to={quote('/' + (self.route or ''))}"
+
+	def get_detail_specs(self):
+		"""Label/value rows for the specification block on a listing page.
+
+		Only what is actually filled in. A row carries either a single `value`,
+		optionally linked, or a list of `values` the template draws as chips.
+		Everything unset is left out rather than rendered blank, so a sparse
+		resource shows a short block instead of a table of dashes.
+		"""
+		rows = []
+
+		if self.license:
+			rows.append(
+				{
+					"label": _("License"),
+					"value": self.license,
+					"url": self.license_url,
+					"is_license": True,
+				}
+			)
+
+		formats = split_multi(self.book_formats) or split_multi(self.music_formats)
+		if formats:
+			rows.append({"label": _("Formats"), "chips": formats})
+
+		styles = split_multi(self.music_styles)
+		if styles:
+			rows.append({"label": _("Styles"), "chips": styles})
+
+		languages = split_multi(self.languages)
+		if languages:
+			rows.append({"label": _("Languages"), "chips": languages})
+
+		titles = cint(self.title_count)
+		tracks = cint(self.track_count)
+		if titles:
+			rows.append({"label": _("Titles"), "value": f"{titles:,}"})
+		elif tracks:
+			rows.append({"label": _("Tracks"), "value": f"{tracks:,}"})
+
+		return rows
 
 	def get_approved_tags(self):
 		"""This resource's tags that an admin has approved.
@@ -589,6 +853,7 @@ class Resource(WebsiteGenerator):
 			"recommended",
 			"average_rating",
 			"rating_count",
+			*CARD_FACT_FIELDS,
 		]
 
 		matches = frappe.get_all(
@@ -610,6 +875,7 @@ class Resource(WebsiteGenerator):
 				{"name": t, "url": f"/resources?tag={quote(t)}&recommended=0"}
 				for t in tags_by_resource.get(r.name, [])
 			]
+			r["facts"] = build_card_facts(r)
 
 		return matches
 

@@ -22,6 +22,17 @@
 	<!-- Category filters -->
 	<div class="filter-bar">
 		<div class="filter-bar-left">
+			{#
+				The pills only ever show one level of the tree at a time, so
+				there is no way to see how the categories relate without walking
+				into them one by one. This opens the whole taxonomy at once.
+			#}
+			<button type="button" class="filter-pill tree-toggle" id="category-tree-toggle"
+				aria-expanded="false" aria-controls="category-tree" title="Browse all categories">
+				<!-- Branch icon: a trunk with two nodes branching off it -->
+				<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+				<span class="sr-only">Browse all categories</span>
+			</button>
 			<a href="{{ all_url }}" class="filter-pill {% if not selected_category %}active{% endif %}">All</a>
 			{% for cat in path_pills %}
 			<span class="filter-arrow">›</span>
@@ -39,41 +50,74 @@
 			{% endif %}
 		</div>
 		<div class="filter-bar-right">
-			<select class="sort-select" onchange="if (this.value) window.location.href = this.value;">
-				{% for opt in sort_options %}
-				<option value="{{ opt.url }}" {% if opt.value == sort %}selected{% endif %}>Sort: {{ opt.label }}</option>
-				{% endfor %}
-			</select>
 			{#
-				Each toggle says what it is doing now and what clicking it would do,
-				since a pill that is already on and one that is off look alike to
-				anyone who did not set them.
+				Recommended and Top Rated were two pills that looked the same on
+				as off. As a named dropdown the current setting reads straight
+				off the control, and the four combinations are explicit rather
+				than something to work out from two independent switches.
+
+				The closed control names itself, the open list does not. A native
+				select has one string for both, so the visible text is the span
+				and the select sits transparently over it, which keeps the native
+				control and its mobile picker intact.
 			#}
-			{% if recommended_only %}
-			{% set recommended_tip = "On: showing only resources an editor has vetted and recommends. Click to include everything else that is published." %}
-			{% else %}
-			{% set recommended_tip = "Off: showing everything published. Click to narrow this to resources an editor has vetted and recommends." %}
-			{% endif %}
-
-			{% if top_rated %}
-			{% set top_rated_tip = "On: showing only resources averaging %d stars or more across their approved reviews. Click to bring the rest back." % top_rated_minimum %}
-			{% else %}
-			{% set top_rated_tip = "Off: showing every resource regardless of review. Click to narrow this to those averaging %d stars or more." % top_rated_minimum %}
-			{% endif %}
-
-			<a href="{{ recommended_toggle_url }}" class="filter-pill recommended-pill filter-tip {% if recommended_only %}active{% endif %}"
-				data-tip="{{ recommended_tip }}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M7 3h10v5a5 5 0 0 1-10 0V3z"/><path d="M11 13h2v4h-2z"/><path d="M8 17h8a1 1 0 0 1 1 1v2H7v-2a1 1 0 0 1 1-1z"/><path d="M7 5H5a2 2 0 0 0 0 4h1" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M17 5h2a2 2 0 0 1 0 4h-1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-				Recommended
-				<span class="sr-only">{{ recommended_tip }}</span>
-			</a>
-			<a href="{{ top_rated_toggle_url }}" class="filter-pill top-rated-pill filter-tip {% if top_rated %}active{% endif %}"
-				data-tip="{{ top_rated_tip }}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{% if top_rated %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
-				Top Rated
-				<span class="sr-only">{{ top_rated_tip }}</span>
-			</a>
+			<div class="select-wrap filter-tip" data-tip="{{ filter_tip }}">
+				<span class="select-display" aria-hidden="true">Filter: {{ filter_label }}</span>
+				<select class="sort-select" aria-label="Filter resources"
+					onchange="if (this.value) window.location.href = this.value;">
+					{% for opt in filter_options %}
+					<option value="{{ opt.url }}" {% if opt.selected %}selected{% endif %}>{{ opt.label }}</option>
+					{% endfor %}
+				</select>
+				<span class="sr-only">{{ filter_tip }}</span>
+			</div>
+			<div class="select-wrap filter-tip" data-tip="{{ sort_tip }}">
+				<span class="select-display" aria-hidden="true">Sort: {{ sort_label }}</span>
+				<select class="sort-select" aria-label="Sort resources"
+					onchange="if (this.value) window.location.href = this.value;">
+					{% for opt in sort_options %}
+					<option value="{{ opt.url }}" {% if opt.value == sort %}selected{% endif %}>{{ opt.label }}</option>
+					{% endfor %}
+				</select>
+				<span class="sr-only">{{ sort_tip }}</span>
+			</div>
 		</div>
+	</div>
+
+	{#
+		The full taxonomy, collapsed until asked for. Every node is a real link
+		carrying the filters already in force, so the panel works with the
+		toggle script doing nothing more than showing it. Counts are of the
+		whole branch under those same filters, so a number here is what
+		selecting that category would actually show.
+	#}
+	<div class="category-tree" id="category-tree" hidden>
+		<ul class="tree-branch tree-root">
+			<li class="tree-node tree-node-root">
+				<a href="{{ all_url }}" class="tree-link {% if not selected_category %}active{% endif %}">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+					<span class="tree-label">Resources</span>
+					<span class="tree-count">{{ category_tree_total }}</span>
+				</a>
+
+				{% if category_tree %}
+				<ul class="tree-branch">
+					{% for node in category_tree recursive %}
+					<li class="tree-node">
+						<a href="{{ node.url }}"
+							class="tree-link {% if node.name == selected_category %}active{% endif %}">
+							<span class="tree-label">{{ node.label }}</span>
+							<span class="tree-count">{{ node.count }}</span>
+						</a>
+						{% if node.children %}
+						<ul class="tree-branch">{{ loop(node.children) }}</ul>
+						{% endif %}
+					</li>
+					{% endfor %}
+				</ul>
+				{% endif %}
+			</li>
+		</ul>
 	</div>
 
 	<!-- Grid -->
@@ -104,6 +148,145 @@
 	padding: 3rem 1rem 4rem;
 }
 
+/*
+ * Category taxonomy browser.
+ *
+ * Elbow connectors are drawn with borders on each node rather than a background
+ * image, so they follow the real line height whatever a label wraps to. The
+ * vertical run is split in two: ::before draws down to the middle of its own
+ * row and turns right into the label, ::after continues past it only when a
+ * sibling follows, which is what stops the last child trailing a stub line.
+ */
+.category-tree {
+	margin: -0.75rem 0 1.75rem;
+	padding: 1.1rem 1.25rem;
+	background: var(--rl-bg-elevated, rgba(255, 255, 255, 0.08));
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	border-radius: 12px;
+	max-height: 60vh;
+	overflow-y: auto;
+}
+
+.tree-branch {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+/* Nested levels step in; the root list carries no indent of its own */
+.tree-node .tree-branch {
+	padding-left: 0.85rem;
+}
+
+.tree-node {
+	position: relative;
+	padding-left: 1.15rem;
+}
+
+.tree-node-root {
+	padding-left: 0;
+}
+
+.tree-node:not(.tree-node-root)::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 0.75rem;
+	height: 0.95rem;
+	border-left: 1px solid var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	border-bottom: 1px solid var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	border-bottom-left-radius: 5px;
+}
+
+.tree-node:not(.tree-node-root):not(:last-child)::after {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0.95rem;
+	bottom: 0;
+	border-left: 1px solid var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+}
+
+.tree-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.45rem;
+	padding: 0.2rem 0.6rem;
+	margin: 0.1rem 0;
+	border-radius: 7px;
+	font-size: 0.85rem;
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: none;
+	transition: background 0.15s;
+}
+
+.tree-link svg {
+	width: 0.95em;
+	height: 0.95em;
+	flex-shrink: 0;
+	opacity: 0.75;
+}
+
+.tree-node-root > .tree-link {
+	font-weight: 600;
+}
+
+.tree-link:hover {
+	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.14));
+	color: var(--rl-text, #f5f5f5);
+	text-decoration: none;
+}
+
+.tree-link.active {
+	background: #fff;
+	color: #1e1b4b;
+	font-weight: 600;
+}
+
+.tree-link.active svg {
+	opacity: 1;
+}
+
+.tree-count {
+	font-size: 0.7rem;
+	font-variant-numeric: tabular-nums;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.tree-link.active .tree-count {
+	color: rgba(30, 27, 75, 0.65);
+}
+
+/*
+ * The toggle is a button among links, so it needs the pill sizing explicitly.
+ * inline-flex rather than the pill's inline-block: an inline SVG with only a
+ * viewBox falls back to its intrinsic 300x150 unless something sizes it, which
+ * is what the width/height below are for.
+ */
+.tree-toggle {
+	display: inline-flex;
+	align-items: center;
+	cursor: pointer;
+	padding-left: 0.7rem;
+	padding-right: 0.7rem;
+	background: transparent;
+	font-family: inherit;
+	line-height: 1;
+}
+
+.tree-toggle svg {
+	width: 0.95em;
+	height: 0.95em;
+	flex-shrink: 0;
+}
+
+.tree-toggle[aria-expanded="true"] {
+	background: #fff;
+	border-color: #fff;
+	color: #1e1b4b;
+}
+
 /* Header */
 .resources-header {
 	display: grid;
@@ -125,7 +308,7 @@
 .search-wrap {
 	position: relative;
 	width: 100%;
-	max-width: 480px;
+	max-width: 600px;
 	justify-self: center;
 }
 
@@ -211,41 +394,27 @@
 	gap: 0.5rem;
 }
 
-.top-rated-pill,
-.recommended-pill {
+/*
+ * The control shows "Filter: All" closed but lists a plain "All" open. A native
+ * select renders the selected option's own text in both places, so the span
+ * below carries the labelled version and sizes the control, while the select
+ * itself is stretched over it with transparent text. The option rule keeps the
+ * open list readable, since it overrides the transparent colour set here.
+ */
+.select-wrap {
+	position: relative;
 	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-}
-
-.top-rated-pill svg,
-.recommended-pill svg {
-	width: 0.9em;
-	height: 0.9em;
-}
-
-.recommended-pill.active {
-	background: rgba(212, 169, 92, 0.92);
-	border-color: rgba(212, 169, 92, 0.92);
-	color: #2e1f08;
-}
-
-.top-rated-pill.active {
-	background: #fbbf24;
-	border-color: #fbbf24;
-	color: #2e1f08;
 }
 
 /*
- * Hover explainer for the two toggles. Anchored to the right so it cannot run
- * off the page from pills that sit at the end of the bar, and drawn on a solid
- * ground rather than the glass used elsewhere, since a paragraph of small text
- * over the gradient is hard to read.
+ * Hover explainer for the two dropdowns. The label says which filter or sort is
+ * on, not what it does, and one of these is usually why a listing came back
+ * shorter than expected. Anchored right so it cannot run off the page from
+ * controls at the end of the bar, and drawn on a solid ground rather than the
+ * glass used elsewhere, since a paragraph of small text over the gradient is
+ * hard to read. focus-within rather than focus-visible: the thing that takes
+ * focus is the select inside, not the element carrying the tip.
  */
-.filter-tip {
-	position: relative;
-}
-
 .filter-tip::after {
 	content: attr(data-tip);
 	position: absolute;
@@ -273,10 +442,29 @@
 }
 
 .filter-tip:hover::after,
-.filter-tip:focus-visible::after {
+.filter-tip:focus-within::after {
 	opacity: 1;
 	visibility: visible;
 	transform: translateY(0);
+}
+
+.select-display {
+	box-sizing: border-box;
+	padding: 0.35rem 2.25rem 0.35rem 0.9rem;
+	border: 1px solid transparent;
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--rl-text, #f5f5f5);
+	white-space: nowrap;
+	pointer-events: none;
+}
+
+.select-wrap .sort-select {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	width: 100%;
+	color: transparent;
 }
 
 .sort-select {
@@ -363,6 +551,26 @@
 </style>
 
 <script>
+(function () {
+	/* Category taxonomy panel. Its own IIFE because the search below returns
+	   early when the grid is empty, and the tree still has to open on a page
+	   that found nothing: an empty result is exactly when someone wants to see
+	   what else is there. */
+	var toggle = document.getElementById("category-tree-toggle");
+	var tree = document.getElementById("category-tree");
+
+	if (!toggle || !tree) return;
+
+	/* Stays closed until asked for, including when a category is selected:
+	   picking one from the tree should not leave the panel open across the
+	   navigation it just caused. */
+	toggle.addEventListener("click", function () {
+		var open = tree.hidden;
+		tree.hidden = !open;
+		toggle.setAttribute("aria-expanded", open ? "true" : "false");
+	});
+}());
+
 (function () {
 	/* Card gradients and tag chips live in resource_card.bundle.js so they also
 	   apply to Similar Resources on the detail page. Only the listing-specific

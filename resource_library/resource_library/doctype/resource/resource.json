@@ -19,14 +19,30 @@
   "tags",
   "tags_input",
   "website",
+  "download_url",
   "route",
   "published",
   "recommended",
   "average_rating",
   "rating_count",
+  "licensing_section",
+  "license",
+  "license_url",
+  "column_break_lic",
+  "languages",
   "software_details_section",
   "source_code_repository",
   "app_store_url",
+  "book_details_section",
+  "book_formats",
+  "column_break_book",
+  "title_count",
+  "music_details_section",
+  "music_formats",
+  "music_styles",
+  "column_break_music",
+  "track_count",
+  "streaming_url",
   "section_break_ngzd",
   "amended_from"
  ],
@@ -178,6 +194,99 @@
    "fieldtype": "Int",
    "label": "Review Count",
    "read_only": 1
+  },
+  {
+   "description": "Direct download, or a bulk export of the whole catalog where one is offered.",
+   "fieldname": "download_url",
+   "fieldtype": "Data",
+   "label": "Download URL",
+   "options": "URL"
+  },
+  {
+   "fieldname": "licensing_section",
+   "fieldtype": "Section Break",
+   "label": "Licensing and Access"
+  },
+  {
+   "fieldname": "license",
+   "fieldtype": "Select",
+   "in_standard_filter": 1,
+   "label": "License",
+   "options": "\nPublic Domain\nCC0\nCC BY\nCC BY-SA\nCC BY-NC\nCC BY-ND\nMIT\nApache-2.0\nGPL-2.0\nGPL-3.0\nOther open license\nFree with conditions\nAll rights reserved"
+  },
+  {
+   "description": "Link to the full terms, for anything the list above cannot express.",
+   "fieldname": "license_url",
+   "fieldtype": "Data",
+   "label": "License URL",
+   "options": "URL"
+  },
+  {
+   "fieldname": "column_break_lic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Comma separated. The languages the resource is actually available in.",
+   "fieldname": "languages",
+   "fieldtype": "Small Text",
+   "label": "Languages"
+  },
+  {
+   "fieldname": "book_details_section",
+   "fieldtype": "Section Break",
+   "label": "Book Details"
+  },
+  {
+   "description": "Comma separated. Which file formats the titles are actually offered in.",
+   "fieldname": "book_formats",
+   "fieldtype": "Small Text",
+   "label": "Formats"
+  },
+  {
+   "fieldname": "column_break_book",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Roughly how many titles the collection holds. Left at zero it is not shown.",
+   "fieldname": "title_count",
+   "fieldtype": "Int",
+   "label": "Number of Titles",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "music_details_section",
+   "fieldtype": "Section Break",
+   "label": "Music Details"
+  },
+  {
+   "description": "Comma separated. Editable notation source and stems are what separate music you may adapt from music you may only play.",
+   "fieldname": "music_formats",
+   "fieldtype": "Small Text",
+   "label": "Formats"
+  },
+  {
+   "description": "Comma separated.",
+   "fieldname": "music_styles",
+   "fieldtype": "Small Text",
+   "label": "Styles"
+  },
+  {
+   "fieldname": "column_break_music",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Roughly how many tracks or songs the collection holds. Left at zero it is not shown.",
+   "fieldname": "track_count",
+   "fieldtype": "Int",
+   "label": "Number of Tracks",
+   "non_negative": 1
+  },
+  {
+   "description": "Where the music can be listened to without downloading it.",
+   "fieldname": "streaming_url",
+   "fieldtype": "Data",
+   "label": "Streaming URL",
+   "options": "URL"
   }
  ],
  "grid_page_length": 50,
@@ -187,7 +296,7 @@
  "is_published_field": "published",
  "is_submittable": 1,
  "links": [],
- "modified": "2026-09-01 00:00:00.000000",
+ "modified": "2026-09-02 18:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource",

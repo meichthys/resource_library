@@ -468,13 +468,18 @@ label,
 }
 
 /*
- * Tag and category pickers on the submission web form.
+ * Tag, category and fixed-vocabulary pickers on the submission web form.
  * The MultiSelectPills and Autocomplete controls normally rely on
  * desk.bundle.css for their layout, and that is not loaded on public pages, so
  * the pill/input/dropdown layout is defined here in full rather than only
- * recoloured. The dropdown rules below are shared by both pickers.
+ * recoloured. The dropdown rules below are shared by every picker.
+ *
+ * .rl-pill-picker drives the formats and styles fields and is visually the tag
+ * picker, so the two share every rule; it exists as its own class only because
+ * it carries no pending-approval note.
  */
-.rl-tag-picker .table-multiselect {
+.rl-tag-picker .table-multiselect,
+.rl-pill-picker .table-multiselect {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -487,13 +492,15 @@ label,
 	border-radius: 8px;
 }
 
-.rl-tag-picker .awesomplete {
+.rl-tag-picker .awesomplete,
+.rl-pill-picker .awesomplete {
 	position: relative;
 	flex: 1 1 140px;
 	min-width: 140px;
 }
 
-.rl-tag-picker .awesomplete > input {
+.rl-tag-picker .awesomplete > input,
+.rl-pill-picker .awesomplete > input {
 	width: 100%;
 	min-height: 24px;
 	padding: 2px 4px;
@@ -504,11 +511,13 @@ label,
 	color: var(--rl-text);
 }
 
-.rl-tag-picker .awesomplete > input::placeholder {
+.rl-tag-picker .awesomplete > input::placeholder,
+.rl-pill-picker .awesomplete > input::placeholder {
 	color: rgba(255, 255, 255, 0.5);
 }
 
-.rl-tag-picker .data-pill {
+.rl-tag-picker .data-pill,
+.rl-pill-picker .data-pill {
 	display: inline-flex;
 	align-items: center;
 	gap: 4px;
@@ -522,24 +531,28 @@ label,
 	white-space: nowrap;
 }
 
-.rl-tag-picker .data-pill .btn-remove {
+.rl-tag-picker .data-pill .btn-remove,
+.rl-pill-picker .data-pill .btn-remove {
 	display: inline-flex;
 	align-items: center;
 	cursor: pointer;
 	opacity: 0.65;
 }
 
-.rl-tag-picker .data-pill .btn-remove:hover {
+.rl-tag-picker .data-pill .btn-remove:hover,
+.rl-pill-picker .data-pill .btn-remove:hover {
 	opacity: 1;
 }
 
-.rl-tag-picker .data-pill svg {
+.rl-tag-picker .data-pill svg,
+.rl-pill-picker .data-pill svg {
 	width: 10px;
 	height: 10px;
 }
 
 /* Autocomplete dropdown */
 .rl-tag-picker .awesomplete > ul,
+.rl-pill-picker .awesomplete > ul,
 .rl-category-picker .awesomplete > ul {
 	position: absolute;
 	z-index: 20;
@@ -557,11 +570,13 @@ label,
 }
 
 .rl-tag-picker .awesomplete > ul[hidden],
+.rl-pill-picker .awesomplete > ul[hidden],
 .rl-category-picker .awesomplete > ul[hidden] {
 	display: none;
 }
 
 .rl-tag-picker .awesomplete > ul > li,
+.rl-pill-picker .awesomplete > ul > li,
 .rl-category-picker .awesomplete > ul > li {
 	padding: 5px 8px;
 	border-radius: 6px;
@@ -571,13 +586,16 @@ label,
 }
 
 .rl-tag-picker .awesomplete > ul > li:hover,
+.rl-pill-picker .awesomplete > ul > li:hover,
 .rl-tag-picker .awesomplete > ul > li[aria-selected="true"],
+.rl-pill-picker .awesomplete > ul > li[aria-selected="true"],
 .rl-category-picker .awesomplete > ul > li:hover,
 .rl-category-picker .awesomplete > ul > li[aria-selected="true"] {
 	background: var(--rl-glass-bg-strong);
 }
 
 .rl-tag-picker .awesomplete mark,
+.rl-pill-picker .awesomplete mark,
 .rl-category-picker .awesomplete mark {
 	background: transparent;
 	color: inherit;
@@ -642,18 +660,22 @@ label,
 }
 
 /*
- * Two columns: the icon sits beside the category and title, then the
- * description and tags span the whole card underneath it. Cards are narrow
- * once the grid is three across, and a full-width line of text fits about a
- * third more of the description than one indented past the icon.
+ * A column: the icon sits beside the category and title in a header row, then
+ * the description, tags and licence stack underneath at full width. Cards are
+ * narrow once the grid is three across, and a full-width line of text fits
+ * about a third more of the description than one indented past the icon.
+ *
+ * Flex rather than grid because cards in a row stretch to a common height and
+ * the licence has to sit at the foot of every one of them. Grid shared that
+ * slack out among its rows, so the licence ended up a different distance from
+ * the bottom on each card depending on how many rows that card happened to
+ * have. In a column, margin-top:auto on the last child absorbs it all.
  */
 .resource-card {
 	position: relative;
 	overflow: hidden;
-	display: grid;
-	grid-template-columns: auto minmax(0, 1fr);
-	align-items: start;
-	column-gap: 1rem;
+	display: flex;
+	flex-direction: column;
 	padding: 1.25rem;
 	background: var(--rl-bg-elevated, #141414);
 	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
@@ -785,12 +807,26 @@ label,
 	color: inherit;
 }
 
+/* Icon beside the title and category */
+.card-head {
+	display: flex;
+	align-items: flex-start;
+	gap: 1rem;
+}
+
+/* min-width:0 lets a long title wrap rather than stretching the row */
+.card-heading {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.3rem;
+}
+
 /* Rounded square rather than a circle: an app icon is usually square already,
    and a circular crop was cutting the corners off the artwork. The radius
    matches the card's own. */
 .card-icon {
-	grid-column: 1;
-	grid-row: 1 / span 2;
 	width: 60px;
 	height: 60px;
 	min-width: 60px;
@@ -814,34 +850,26 @@ label,
 }
 
 .card-cat {
-	grid-column: 2;
-	grid-row: 2;
-	/* Grid items blockify, so keep the pill sized to its label */
-	justify-self: start;
 	display: inline-block;
 	padding: 2px 10px;
 	border-radius: 999px;
 	font-size: 0.7rem;
 	font-weight: 600;
 	color: #fff;
-	margin-bottom: 0.3rem;
 	white-space: nowrap;
 }
 
 /* The rating badge overlaps this row only, so the clearance for it sits here */
 .card-title {
-	grid-column: 2;
-	grid-row: 1;
 	padding-right: 3.25rem;
 	font-size: 0.95rem;
 	font-weight: 600;
 	color: var(--rl-text, #f5f5f5);
-	margin-bottom: 0.3rem;
 	overflow-wrap: anywhere;
 }
 
 .card-desc {
-	grid-column: 1 / -1;
+	margin-top: 0.75rem;
 	font-size: 0.8rem;
 	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
 	line-height: 1.5;
@@ -851,9 +879,84 @@ label,
 	overflow: hidden;
 }
 
+/*
+ * Licence, formats and catalogue size: one line under the description, spanning
+ * the full card the same way the description and tags do. Set at the tag row's
+ * size so the three read as one block rather than competing for the eye.
+ */
+.card-facts {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin-top: 0.55rem;
+	font-size: 0.68rem;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+/*
+ * The licence closes the card: centred under a hairline, in the same muted tone
+ * as the description. No colour by design. Across a grid of cards a row of
+ * green and amber pills reads as a wall of status alerts, and the licence is
+ * context to carry with the resource, not a warning about it. The padlock still
+ * opens or closes with the terms, which keeps the distinction legible.
+ */
+.card-license-row {
+	display: flex;
+	justify-content: center;
+	/* Absorbs whatever slack the card has, pinning the licence to the foot so
+	   it sits the same distance from the bottom edge on every card in a row. */
+	margin-top: auto;
+	/* Trims the card's own bottom padding: a full 1.25rem under a single line
+	   of small muted text left the footer floating well clear of the edge. */
+	margin-bottom: -0.65rem;
+	padding-top: 0.4rem;
+	border-top: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+}
+
+/*
+ * A little air above the rule. margin-top:auto resolves to zero on the tallest
+ * card in a row, where there is no slack left to absorb, and without this the
+ * rule sits flush against the tags on exactly that card. Only applies where a
+ * licence row actually follows, so a card without one keeps its own spacing.
+ */
+.card-body:has(.card-license-row) > :nth-last-child(2) {
+	margin-bottom: 0.35rem;
+}
+
+.card-license {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3rem;
+	font-size: 0.65rem;
+	font-weight: 500;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.card-license svg {
+	width: 10px;
+	height: 10px;
+	flex-shrink: 0;
+	opacity: 0.8;
+}
+
+.card-formats,
+.card-count {
+	white-space: nowrap;
+}
+
+.card-count {
+	font-variant-numeric: tabular-nums;
+}
+
+.card-facts-sep {
+	color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+}
+
 /* Card tags */
 .card-tags {
-	grid-column: 1 / -1;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.25rem;

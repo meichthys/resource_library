@@ -1,10 +1,32 @@
 [
  {
+  "category": "Books",
+  "docstatus": 0,
+  "doctype": "Category",
+  "is_group": 1,
+  "modified": "2026-09-02 00:00:00.000000",
+  "name": "Books",
+  "old_parent": null,
+  "parent_category": null,
+  "status": "Approved"
+ },
+ {
+  "category": "Music",
+  "docstatus": 0,
+  "doctype": "Category",
+  "is_group": 1,
+  "modified": "2026-09-02 00:00:00.000000",
+  "name": "Music",
+  "old_parent": null,
+  "parent_category": null,
+  "status": "Approved"
+ },
+ {
   "category": "Software",
   "docstatus": 0,
   "doctype": "Category",
   "is_group": 1,
-  "modified": "2026-08-27 18:53:57.385725",
+  "modified": "2026-09-02 00:00:00.000000",
   "name": "Software",
   "old_parent": null,
   "parent_category": null,
