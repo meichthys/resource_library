@@ -3,6 +3,7 @@
 {% from "templates/includes/star_rating.html" import star_rating %}
 
 {% block page_content %}
+{% include "templates/includes/category_colors.html" %}
 <div class="resource-page">
 	<div class="resource-container mx-auto">
 
@@ -33,7 +34,7 @@
 			{% if icon %}
 			<img src="{{ icon }}" alt="{{ title }}" class="app-icon">
 			{% else %}
-			<div class="app-icon app-icon-placeholder">
+			<div class="app-icon app-icon-placeholder" data-category="{{ category }}">
 				{{ title[0] | upper }}
 			</div>
 			{% endif %}
@@ -50,6 +51,70 @@
 			</div>
 			{% endif %}
 
+			<!-- Title -->
+			<h1 class="app-title">{{ title }}</h1>
+
+			<!-- Description -->
+			<div class="app-description">{{ description | safe }}</div>
+
+			{#
+				Key facts as a row of small cards, label above value. Each holds
+				one data point, so the row reads at a glance rather than as a
+				table to parse. Every card that has somewhere to go is itself the
+				link: Rating to the reviews, Category to the filtered listing,
+				Licence to its terms and Website to the site.
+			#}
+			<div class="detail-stats">
+				{% if category %}
+				<a href="/resources?category={{ category | urlencode }}&recommended=0" class="stat-card">
+					<!-- Folder icon: where the resource is filed -->
+					<svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+					<div class="stat-label">Category</div>
+					<div class="stat-value">{{ category }}</div>
+				</a>
+				{% endif %}
+
+				<a href="#reviews" class="stat-card">
+					<!-- Star icon, the same mark the rating rows use -->
+					<svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01L12 2z"/></svg>
+					<div class="stat-label">Rating</div>
+					<div class="stat-value">
+						{{ star_rating(average_rating, max_rating, "0.95rem") }}
+						<span class="stat-sub">
+							{%- if rating_count -%}
+							{{ '%.1f' | format(average_rating) }} from {{ rating_count }} review{% if rating_count != 1 %}s{% endif %}
+							{%- else -%}
+							No reviews yet
+							{%- endif -%}
+						</span>
+					</div>
+				</a>
+
+				{% if license_name %}
+				{#
+					A licence with terms to read makes the whole card the link, the
+					way the cards either side of it do. One without a URL stays a
+					plain card: there is nothing for a link to open.
+				#}
+				{% set license_tag = "a" if license_url else "div" %}
+				<{{ license_tag }} class="stat-card"{% if license_url %} href="{{ license_url }}" target="_blank" rel="noopener noreferrer"{% endif %}>
+					<!-- Document icon: the terms the resource is given under -->
+					<svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+					<div class="stat-label">License</div>
+					<div class="stat-value">{{ license_name }}</div>
+				</{{ license_tag }}>
+				{% endif %}
+				{% if website %}
+				<a href="{{ website }}" class="stat-card" target="_blank" rel="noopener noreferrer">
+					<!-- Globe icon: where the resource lives -->
+					<svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+					<div class="stat-label">Website</div>
+					<div class="stat-value">{{ website_label }}</div>
+				</a>
+				{% endif %}
+
+			</div>
+
 			<!-- Tags -->
 			{% if tags %}
 			<div class="app-tags">
@@ -59,53 +124,14 @@
 			</div>
 			{% endif %}
 
-			<!-- Title -->
-			<h1 class="app-title">{{ title }}</h1>
-
-			<!-- Rating -->
-			<a href="#reviews" class="app-rating">
-				{{ star_rating(average_rating, max_rating, "1.05rem") }}
-				<span class="app-rating-count">
-					{%- if rating_count -%}
-					{{ '%.1f' | format(average_rating) }} from {{ rating_count }} review{% if rating_count != 1 %}s{% endif %}
-					{%- else -%}
-					No reviews yet
-					{%- endif -%}
-				</span>
-			</a>
-
-			<!-- Description -->
-			<div class="app-description">{{ description | safe }}</div>
-
 			<!-- Actions -->
-			{% if app_store_url or website or source_code_repository or streaming_url or download_url %}
+			{% if source_code_repository or download_url %}
 			<div class="app-actions">
-				{% if streaming_url %}
-				<a href="{{ streaming_url }}" class="action-btn btn-listen" target="_blank" rel="noopener noreferrer">
-					<!-- Play icon -->
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor"/></svg>
-					Listen
-				</a>
-				{% endif %}
 				{% if download_url %}
 				<a href="{{ download_url }}" class="action-btn btn-download" target="_blank" rel="noopener noreferrer">
 					<!-- Download icon -->
 					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v4a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 					Download
-				</a>
-				{% endif %}
-				{% if app_store_url %}
-				<a href="{{ app_store_url }}" class="action-btn btn-get-app" target="_blank" rel="noopener noreferrer">
-					<!-- Download/store icon -->
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-					Get App
-				</a>
-				{% endif %}
-				{% if website %}
-				<a href="{{ website }}" class="action-btn btn-website" target="_blank" rel="noopener noreferrer">
-					<!-- Globe icon -->
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-					Website
 				</a>
 				{% endif %}
 				{% if source_code_repository %}
@@ -116,47 +142,6 @@
 				</a>
 				{% endif %}
 			</div>
-			{% endif %}
-
-			{#
-				Licence, formats, languages and catalogue size. Built server side
-				(Resource.get_detail_specs) so only what is filled in appears:
-				a sparse resource gets a short block rather than a table of
-				dashes. The licence row leads because it is the one thing this
-				site exists to report.
-			#}
-			{% if specs %}
-			<dl class="app-specs">
-				{% for spec in specs %}
-				<div class="spec-row">
-					<dt class="spec-label">{{ spec.label }}</dt>
-					<dd class="spec-value">
-						{% if spec.chips %}
-						{% for value in spec.chips %}
-						<span class="spec-chip">{{ value }}</span>
-						{% endfor %}
-						{% elif spec.is_license %}
-						<span class="spec-license {% if license_is_open %}is-open{% else %}is-limited{% endif %}">
-							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/>{% if license_is_open %}<path d="M8 11V7a4 4 0 0 1 7.5-2"/>{% else %}<path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% endif %}</svg>
-							{{ spec.value }}
-						</span>
-						{% if spec.url %}
-						<a href="{{ spec.url }}" class="spec-link" target="_blank" rel="noopener noreferrer">Terms</a>
-						{% endif %}
-						<span class="spec-note">
-							{%- if license_is_open -%}
-							Free to adapt, translate and redistribute
-							{%- else -%}
-							Free of charge, but restricted
-							{%- endif -%}
-						</span>
-						{% else %}
-						{{ spec.value }}
-						{% endif %}
-					</dd>
-				</div>
-				{% endfor %}
-			</dl>
 			{% endif %}
 
 			<!-- Badges -->
@@ -281,30 +266,6 @@
 
 <script>
 (function () {
-	var gradients = [
-		"linear-gradient(135deg, #7c3aed, #4f46e5)",
-		"linear-gradient(135deg, #0d9488, #059669)",
-		"linear-gradient(135deg, #db2777, #e11d48)",
-		"linear-gradient(135deg, #ca8a04, #a16207)",
-		"linear-gradient(135deg, #2563eb, #0891b2)",
-		"linear-gradient(135deg, #ea580c, #dc2626)",
-		"linear-gradient(135deg, #9333ea, #c026d3)",
-		"linear-gradient(135deg, #64748b, #334155)",
-	];
-
-	function hashGradient(name) {
-		var h = Array.from(name || "").reduce(function (a, c) { return a + c.charCodeAt(0); }, 0);
-		return gradients[h % gradients.length];
-	}
-
-	var leaf = document.querySelector(".cat-leaf");
-	var grad = leaf ? hashGradient(leaf.dataset.category || leaf.textContent.trim()) : null;
-
-	if (leaf && grad) leaf.style.background = grad;
-
-	var placeholder = document.querySelector(".app-icon-placeholder");
-	if (placeholder) placeholder.style.background = grad || hashGradient(placeholder.textContent.trim());
-
 	/* Embed badge picker: one code block / download link reflects the chosen variant */
 	var choices = document.querySelectorAll(".embed-choice");
 	var codeOut = document.getElementById("embed-code");
@@ -549,6 +510,7 @@ frappe.ready(function () {
 }
 
 .app-icon-placeholder {
+	background: var(--cat-color, #3f3f46);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
@@ -585,6 +547,7 @@ frappe.ready(function () {
 
 .cat-leaf {
 	display: inline-block;
+	background: var(--cat-color, #3f3f46);
 	padding: 3px 10px;
 	border-radius: 999px;
 	font-size: 0.72rem;
@@ -598,15 +561,15 @@ frappe.ready(function () {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	gap: 0.35rem;
-	margin-bottom: 0.9rem;
+	gap: 0.4rem;
+	margin-top: 1rem;
 }
 
 .app-tag {
 	display: inline-block;
-	padding: 2px 9px;
+	padding: 4px 12px;
 	border-radius: 999px;
-	font-size: 0.7rem;
+	font-size: 0.8rem;
 	font-weight: 500;
 	text-decoration: none;
 	color: var(--rl-text-muted, rgba(245, 245, 245, 0.75));
@@ -621,28 +584,6 @@ frappe.ready(function () {
 }
 
 /* Rating readout in the header card */
-.app-rating {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.5rem;
-	margin-bottom: 1rem;
-	text-decoration: none;
-}
-
-.app-rating:hover {
-	text-decoration: none;
-}
-
-.app-rating-count {
-	font-size: 0.8rem;
-	font-weight: 500;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-}
-
-.app-rating:hover .app-rating-count {
-	color: var(--rl-text, #f5f5f5);
-}
-
 /* Reviews */
 .reviews-section {
 	margin-top: 1.5rem;
@@ -882,109 +823,90 @@ frappe.ready(function () {
 	text-align: left;
 }
 
+/*
+ * Key facts under the description: one small card per data point, label above
+ * value. A grid rather than flex so the cards share width evenly and drop to
+ * fewer columns on a narrow screen instead of squeezing, and align-self keeps
+ * the row full width inside a card that centres its children.
+ */
+.detail-stats {
+	align-self: stretch;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	gap: 0.75rem;
+	margin-top: 1.75rem;
+}
+
+.stat-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 0.4rem;
+	padding: 0.9rem 1rem;
+	border-radius: 12px;
+	background: var(--rl-surface-hover, rgba(255, 255, 255, 0.06));
+	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
+	text-decoration: none;
+	color: inherit;
+	transition: background 0.15s, border-color 0.15s;
+}
+
+a.stat-card:hover {
+	background: var(--rl-glass-bg-strong, rgba(255, 255, 255, 0.14));
+	border-color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Muted like the label beneath it, so the pair reads as one heading */
+.stat-icon {
+	width: 1.05rem;
+	height: 1.05rem;
+	flex-shrink: 0;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+	opacity: 0.85;
+}
+
+.stat-label {
+	font-size: 0.68rem;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
+.stat-value {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.3rem;
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--rl-text, #f5f5f5);
+	overflow-wrap: anywhere;
+}
+
+.stat-sub {
+	font-size: 0.72rem;
+	font-weight: 400;
+	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
+}
+
 /* Action buttons */
 .app-actions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 0.75rem;
 	justify-content: center;
-}
-
-/*
- * Specification block: licence, formats, styles, languages, size, access.
- * A label column wide enough for the longest label and no wider, so the values
- * line up without the block turning into a table with visible rulings.
- */
-.app-specs {
-	align-self: stretch;
-	display: grid;
-	gap: 0.6rem;
-	margin: 1.75rem 0 0 0;
-	padding-top: 1.5rem;
-	border-top: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
-	text-align: left;
-}
-
-.spec-row {
-	display: grid;
-	grid-template-columns: 6.5rem minmax(0, 1fr);
-	align-items: baseline;
-	gap: 0.75rem;
-}
-
-.spec-label {
-	font-size: 0.75rem;
-	font-weight: 600;
-	letter-spacing: 0.04em;
-	text-transform: uppercase;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-	margin: 0;
-}
-
-.spec-value {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 0.35rem;
-	margin: 0;
-	font-size: 0.9rem;
-	color: var(--rl-text, #f5f5f5);
-	font-variant-numeric: tabular-nums;
-}
-
-.spec-chip {
-	display: inline-block;
-	padding: 2px 9px;
-	border-radius: 999px;
-	font-size: 0.75rem;
-	font-weight: 500;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-	border: 1px solid var(--rl-border, rgba(255, 255, 255, 0.12));
-}
-
-/* Same green/amber split the cards use, at the detail page's larger size */
-.spec-license {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.3rem;
-	padding: 2px 10px 3px;
-	border-radius: 999px;
-	font-size: 0.78rem;
-	font-weight: 600;
-	white-space: nowrap;
-}
-
-.spec-license svg {
-	width: 12px;
-	height: 12px;
-	flex-shrink: 0;
-}
-
-.spec-license.is-open {
-	background: rgba(52, 211, 153, 0.18);
-	border: 1px solid rgba(52, 211, 153, 0.45);
-	color: #6ee7b7;
-}
-
-.spec-license.is-limited {
-	background: rgba(251, 191, 36, 0.16);
-	border: 1px solid rgba(251, 191, 36, 0.42);
-	color: #fcd34d;
-}
-
-.spec-note {
-	font-size: 0.78rem;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-}
-
-.spec-link {
-	font-size: 0.78rem;
-	color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
-	text-decoration: underline;
-}
-
-.spec-link:hover {
-	color: var(--rl-text, #f5f5f5);
+	/*
+	 * The card's children each carry their own top margin, so this is the whole
+	 * of what separates the buttons from the tag chips above them. Set to the
+	 * section step the key facts use rather than the tags' 1rem: the buttons
+	 * are the next thing to do, not more of the row above.
+	 */
+	margin-top: 1.75rem;
 }
 
 /* Repo badges (shields.io) */
@@ -1176,12 +1098,6 @@ frappe.ready(function () {
 
 	.action-btn {
 		width: 100%;
-	}
-
-	/* Not enough width for a label column beside the values */
-	.spec-row {
-		grid-template-columns: 1fr;
-		gap: 0.25rem;
 	}
 }
 </style>

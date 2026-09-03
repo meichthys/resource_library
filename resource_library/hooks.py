@@ -27,6 +27,9 @@ fixtures = [
 	# The branches CATEGORY_SECTIONS keys its conditional fields off. Without
 	# these a fresh site has no category that turns those sections on.
 	{"doctype": "Category", "filters": [["category", "in", ["Software", "Books", "Music"]]]},
+	# The licence vocabulary the site ships with. User-requested licences are
+	# left out: those are site data, not part of the app.
+	{"doctype": "License", "filters": [["status", "=", "Approved"]]},
 ]
 
 # Includes in <head>
@@ -34,7 +37,9 @@ fixtures = [
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/resource_library/css/resource_library.css"
-# app_include_js = "/assets/resource_library/js/resource_library.js"
+# The Approve action the moderated lists share. Loaded with the desk rather than
+# from each list, so the helper is defined before any of those lists opens.
+app_include_js = "approvals.bundle.js"
 
 # include js, css files in header of web template
 # Note: must contain ".bundle." and NOT start with "/assets" for Frappe to

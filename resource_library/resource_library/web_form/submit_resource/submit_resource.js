@@ -1,14 +1,13 @@
 /**
- * Conditional field groups, and the fixed vocabularies behind the pill pickers.
+ * Conditional field groups.
  *
- * Both come from CATEGORY_SECTIONS and MULTI_VALUE_FIELDS on the server, which
- * is also what Resource.validate enforces and what the desk form drives its own
- * sections off, so the three cannot drift apart. The desk form keeps each group
+ * These come from CATEGORY_SECTIONS on the server, which is also what
+ * Resource.validate enforces and what the desk form drives its own sections
+ * off, so the three cannot drift apart. The desk form keeps each group
  * in a section it shows or hides as a unit; Web Forms have no sections, so the
  * same rule is applied field by field here.
  */
 let sections = {};
-let vocabularies = {};
 
 /** Every field belonging to some conditional group, flattened. */
 function conditional_fields() {
@@ -23,15 +22,14 @@ frappe.ready(function () {
 		callback: function (r) {
 			const options = r.message || {};
 			sections = options.sections || {};
-			vocabularies = options.multi_value || {};
 
 			if (in_view_mode()) {
 				setup_view_mode();
 				return;
 			}
 
-			setup_multi_pickers();
 			setup_category_picker();
+			setup_license_picker();
 			setup_tag_picker();
 		},
 	});
@@ -77,7 +75,11 @@ function setup_view_mode() {
 	// How a category was requested is not part of the resource, and a
 	// category-specific field only applies when there is something in it.
 	const doc = web_form.doc || {};
-	const conditional = ["category_parent_input", "category_is_group_input"].concat(
+	const conditional = [
+		"category_parent_input",
+		"category_is_group_input",
+		"license_url_input",
+	].concat(
 		conditional_fields().filter((fieldname) => !doc[fieldname])
 	);
 
@@ -322,78 +324,75 @@ function build_category_picker(field, options) {
 }
 
 /**
- * Drive the fixed-vocabulary fields (formats, styles) with pill pickers.
+ * Web Forms validate Link fields against existing records, so the License link
+ * cannot be used to request a license the site does not list yet. `license_input`
+ * is a plain Data field on the server instead; here we hide that input and drive
+ * it with a searchable picker that also accepts a typed name.
  *
- * Same storage as the tag picker below, a comma separated string, but no
- * approval note and no typed values: these lists are code constants on the
- * server, which drops anything not on them in Resource.normalize_multi_values.
- * Offering only what is on the list is what keeps that from silently eating
- * someone's input.
+ * A typed name is a request, and unlike a category it cannot be made on the name
+ * alone: an unfamiliar license says nothing about what it permits. The URL field
+ * is shown, and marked required, only while the name being given is genuinely new.
  */
-function setup_multi_pickers() {
+function setup_license_picker() {
 	const web_form = frappe.web_form;
 	if (!web_form || !web_form.fields_dict) return;
 
-	Object.keys(vocabularies).forEach(function (fieldname) {
-		const field = web_form.fields_dict[fieldname];
-		if (field && field.$wrapper) {
-			build_pill_picker(field, vocabularies[fieldname]);
-		}
+	const field = web_form.fields_dict.license_input;
+	if (!field || !field.$wrapper) return;
+
+	// Nothing is named yet, so keep the URL out of the way rather than letting
+	// it flash in and back out while the approved list is still being fetched.
+	const url_field = web_form.fields_dict.license_url_input;
+	if (url_field) url_field.toggle(false);
+
+	frappe.call({
+		method: "resource_library.resource_library.doctype.resource.resource.get_license_options",
+		callback: function (r) {
+			build_license_picker(field, r.message || []);
+		},
 	});
 }
 
-function build_pill_picker(field, choices) {
-	const $input_wrapper = field.$wrapper.find(".control-input-wrapper");
-	$input_wrapper.hide();
+function build_license_picker(field, options) {
+	const web_form = frappe.web_form;
+	const approved_lookup = new Map(options.map((o) => [o.value.toLowerCase(), o]));
+	const url_field = web_form.fields_dict.license_url_input;
 
-	const $host = $('<div class="rl-pill-picker"></div>').insertAfter($input_wrapper);
+	const $note = $('<div class="rl-tag-note"></div>').insertAfter(
+		field.$wrapper.find(".control-input-wrapper")
+	);
 
-	const control = frappe.ui.form.make_control({
-		df: {
-			fieldtype: "MultiSelectPills",
-			fieldname: `rl_${field.df.fieldname}_picker`,
-			placeholder: __("Select one or more"),
-			get_data: function () {
-				return choices.map((choice) => ({ value: choice, label: choice }));
-			},
-			change: function () {
-				sync();
-			},
+	make_category_control(field, options.map((o) => o.value), {
+		placeholder: __("Search licenses, or type a new one"),
+		allow_new: true,
+		on_change: function (value) {
+			const known = value ? approved_lookup.get(value.toLowerCase()) : null;
+			const is_new = !!value && !known;
+
+			if (url_field) {
+				url_field.toggle(is_new);
+				url_field.df.reqd = is_new ? 1 : 0;
+
+				// An existing license carries its own terms, so a URL typed for
+				// a name a moment ago is not submitted alongside it.
+				if (!is_new) url_field.set_value("");
+			}
+
+			render_pending_note(
+				$note,
+				is_new
+					? __(
+							"{0} is a new license. Add a link to its terms; an admin reviews it before it appears publicly.",
+							[bold_value(value)]
+						)
+					: ""
+			);
 		},
-		parent: $host,
-		render_input: true,
-		only_input: true,
-	});
+	}).seed();
 
-	function sync() {
-		const rows = control.get_value();
-		const text = (Array.isArray(rows) ? rows.filter(Boolean) : []).join(", ");
-
-		// Write straight to the input rather than field.set_value(): set_value
-		// calls set_input(), which re-renders the field and would destroy the
-		// picker we injected into it.
-		field.value = text;
-		if (field.$input) field.$input.val(text);
-	}
-
-	control.$input.on("awesomplete-selectcomplete", function () {
-		setTimeout(sync, 0);
-	});
-
-	// Removing a pill mutates rows directly, so re-sync after the click settles
-	$host.on("click", ".btn-remove", function () {
-		setTimeout(sync, 0);
-	});
-
-	// Seed from an existing submission being edited
-	const initial = String(field.get_value() || "")
-		.split(",")
-		.map((part) => part.trim())
-		.filter(Boolean);
-
-	if (initial.length) control.set_value(initial);
-
-	sync();
+	// Reflect whatever the form loaded with, so an existing submission opens
+	// with the URL shown or hidden to match.
+	field.$wrapper.find("input").trigger("blur");
 }
 
 /**

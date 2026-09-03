@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 import re
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 import frappe
 from frappe import _
@@ -10,6 +10,7 @@ from frappe.utils import cint, get_url
 from frappe.website.website_generator import WebsiteGenerator
 
 from resource_library.badge import BADGE_SIZE
+from resource_library.category_colors import get_category_color_css
 from resource_library.resource_library.doctype.resource_review.resource_review import (
 	MAX_RATING,
 	get_reviews,
@@ -28,148 +29,77 @@ REPO_URL_PATTERN = re.compile(
 CATEGORY_SECTIONS = {
 	"Software": {
 		"section": "software_details_section",
-		"fields": ["source_code_repository", "app_store_url"],
+		"fields": ["source_code_repository"],
 		"required": ["source_code_repository"],
 	},
-	"Books": {
-		"section": "book_details_section",
-		"fields": ["book_formats", "title_count"],
-		"required": [],
-	},
-	"Music": {
-		"section": "music_details_section",
-		"fields": ["music_formats", "music_styles", "track_count", "streaming_url"],
-		"required": [],
-	},
 }
 
-# Fixed vocabularies for the comma separated multi-value fields. These are
-# developer-defined rather than records an admin curates, which is why they live
-# here and not in a doctype: adding a format is a code change, not data entry.
-BOOK_FORMATS = [
-	"EPUB",
-	"PDF",
-	"MOBI/Kindle",
-	"HTML",
-	"Plain text",
-	"Audiobook",
-	"Source files",
-]
-
-MUSIC_FORMATS = [
-	"Audio",
-	"Sheet music",
-	"Lead sheets",
-	"Chord charts",
-	"Lyrics",
-	"MIDI",
-	"Notation source",
-	"Stems/multitracks",
-	"Video",
-]
-
-MUSIC_STYLES = [
-	"Hymns",
-	"Contemporary worship",
-	"Metrical psalms",
-	"Gospel",
-	"Choral",
-	"Instrumental",
-	"Children's",
-	"Scripture songs",
-]
-
-# Fields whose value is a comma separated selection from a fixed list above.
-# Anything not on the list is dropped on save, so a hand-typed value cannot
-# quietly become a one-off format nobody else uses.
-MULTI_VALUE_FIELDS = {
-	"book_formats": BOOK_FORMATS,
-	"music_formats": MUSIC_FORMATS,
-	"music_styles": MUSIC_STYLES,
-}
-
-# Licenses that let someone adapt, translate and redistribute the work, which is
-# the distinction this site exists to draw.
-#
-# The Creative Commons entries here are exactly the ones Creative Commons itself
-# approves for Free Cultural Works: NC and ND are free of charge but not free of
-# restriction, so they deliberately fall outside, and so does "Free with
-# conditions", the bucket for a resource given away under its own bespoke terms.
-# That last case turns out to be the common one among ministry websites, which
-# routinely give everything away while forbidding redistribution.
-OPEN_LICENSES = {
-	"Public Domain",
-	"CC0",
-	"CC BY",
-	"CC BY-SA",
-	"MIT",
-	"Apache-2.0",
-	"GPL-2.0",
-	"GPL-3.0",
-	"Other open license",
-}
-
-# Formats named on a card before the rest roll up into a "+n" marker. The card
-# already carries a banner, a rating, a category pill and a tag row, so this
-# stays deliberately tight.
-CARD_FORMAT_LIMIT = 3
+def get_approved_license_names():
+	"""Every license an admin has approved. One a submitter requested stays off
+	the public site until then, exactly as a requested tag does."""
+	return set(frappe.get_all("License", filters={"status": "Approved"}, pluck="name"))
 
 
-def split_multi(raw):
-	"""Comma separated field to a list, blanks and duplicates removed."""
-	values = []
-	seen = set()
-	for part in (raw or "").split(","):
-		label = part.strip()
-		if label and label.lower() not in seen:
-			seen.add(label.lower())
-			values.append(label)
-	return values
+@frappe.whitelist()
+def get_license_options():
+	"""Approved licenses offered in the submission form's license picker.
 
-
-def is_open_license(license_name):
-	return (license_name or "") in OPEN_LICENSES
-
-
-# Fields a resource card needs beyond the listing's own, so the facts row can be
-# built without a second query per card.
-CARD_FACT_FIELDS = [
-	"license",
-	"book_formats",
-	"music_formats",
-	"title_count",
-	"track_count",
-]
-
-
-def build_card_facts(row):
-	"""The licence / formats / size line on a resource card.
-
-	Returns None when the resource has none of it, so the template skips the
-	markup rather than drawing an empty strip under the description.
+	Each carries its URL so the form can show where the terms are without a
+	round trip, and so it can tell an existing license from a new one: typing a
+	name nobody has approved is a request, and a request needs a URL.
 	"""
-	license_name = row.get("license")
-	formats = split_multi(row.get("book_formats")) or split_multi(row.get("music_formats"))
+	return frappe.get_all(
+		"License",
+		filters={"status": "Approved"},
+		fields=["name as value", "url"],
+		order_by="name asc",
+	)
 
-	titles = cint(row.get("title_count"))
-	tracks = cint(row.get("track_count"))
-	count = titles or tracks
 
-	if not (license_name or formats or count):
+def resolve_license_name(raw, url=None):
+	"""Map a typed license name to a License docname.
+
+	A name that does not exist yet is created without a status so the doctype
+	default (Pending) applies, keeping user-requested licenses off the public
+	site until an admin approves them.
+
+	Unlike a category, a new license cannot be requested without a URL: the name
+	alone asserts something about copyright that nobody can check, and this site
+	exists to report exactly that. An existing license ignores any URL passed
+	alongside it, since its terms belong to the record rather than the request.
+	"""
+	name = (raw or "").strip()
+	if not name:
 		return None
 
-	count_label = ""
-	if count:
-		singular, plural = ("title", "titles") if titles else ("track", "tracks")
-		count_label = f"{count:,} {singular if count == 1 else plural}"
+	existing = frappe.db.get_value("License", {"license_name": name}, "name")
+	if existing:
+		return existing
 
-	return {
-		"license": license_name,
-		"license_is_open": is_open_license(license_name),
-		"formats": formats[:CARD_FORMAT_LIMIT],
-		"formats_extra": max(len(formats) - CARD_FORMAT_LIMIT, 0),
-		"count_label": count_label,
-	}
+	url = (url or "").strip()
+	if not url:
+		frappe.throw(
+			_("{0} is not a license the site lists yet, so it needs a URL for its terms.").format(
+				frappe.bold(name)
+			)
+		)
+
+	license_doc = frappe.get_doc({"doctype": "License", "license_name": name, "url": url})
+	license_doc.insert(ignore_permissions=True)
+	return license_doc.name
+
+
+def get_display_host(url):
+	"""Hostname of a URL, without scheme or a leading www.
+
+	A full URL is too long to sit in a stat card, and the host is the part that
+	identifies the site anyway.
+	"""
+	if not url:
+		return ""
+
+	host = urlparse(url if "://" in url else f"https://{url}").netloc
+	return host[4:] if host.startswith("www.") else host
 
 
 def get_repo_badges(repo_url):
@@ -374,16 +304,12 @@ def get_category_options():
 
 @frappe.whitelist()
 def get_field_options():
-	"""Vocabularies for the fixed multi-value pickers, plus the section map.
+	"""The conditional field groups, for the two forms that show and hide them.
 
-	Both forms build the same pill pickers and apply the same show/hide rule, so
-	they read the shapes from here rather than each keeping their own copy that
-	can drift out of step with the server that validates against it.
+	Both forms apply the same show/hide rule, so they read the shape from here
+	rather than each keeping a copy that can drift from the server enforcing it.
 	"""
-	return {
-		"multi_value": MULTI_VALUE_FIELDS,
-		"sections": CATEGORY_SECTIONS,
-	}
+	return {"sections": CATEGORY_SECTIONS}
 
 
 def resolve_category_name(raw, parent=None, is_group=0):
@@ -566,6 +492,7 @@ def get_category_sections(category):
 class Resource(WebsiteGenerator):
 	def validate(self):
 		self.sync_category()
+		self.sync_license()
 		self.apply_category_sections()
 		self.sync_tags()
 		self.validate_category_approved()
@@ -591,8 +518,6 @@ class Resource(WebsiteGenerator):
 				df = self.meta.get_field(fieldname)
 				self.set(fieldname, 0 if df and df.fieldtype in ("Check", "Int") else None)
 
-		self.normalize_multi_values()
-
 		for branch in branches:
 			for fieldname in CATEGORY_SECTIONS[branch]["required"]:
 				if not self.get(fieldname):
@@ -601,21 +526,6 @@ class Resource(WebsiteGenerator):
 							_(self.meta.get_label(fieldname)), _(branch)
 						)
 					)
-
-	def normalize_multi_values(self):
-		"""Hold each comma separated selection to its fixed vocabulary.
-
-		Anything off the list is dropped rather than kept, so a typo in the
-		picker cannot become a one-off format that renders on a card and matches
-		nothing else on the site.
-		"""
-		for fieldname, allowed in MULTI_VALUE_FIELDS.items():
-			raw = self.get(fieldname)
-			if not raw:
-				continue
-			lookup = {value.lower(): value for value in allowed}
-			kept = [lookup[label.lower()] for label in split_multi(raw) if label.lower() in lookup]
-			self.set(fieldname, ", ".join(kept))
 
 	def sync_category(self):
 		"""Keep the Category link and its plain text mirror in step.
@@ -650,6 +560,31 @@ class Resource(WebsiteGenerator):
 		)
 		self.category_parent_input = (placement and placement.parent_category) or ""
 		self.category_is_group_input = cint(placement and placement.is_group)
+
+	def sync_license(self):
+		"""Keep the License link and its plain text mirror in step.
+
+		Same shape as sync_category: Web Forms validate Link fields against
+		existing records, so the public submission form cannot request a license
+		the site does not have yet. It writes `license_input` instead, with
+		`license_url_input` alongside for a license being created. Whichever side
+		actually changed on this save wins.
+		"""
+		previous_input = None
+		if not self.is_new():
+			previous_input = frappe.db.get_value("Resource", self.name, "license_input")
+
+		if (self.license_input or "") != (previous_input or ""):
+			self.license = resolve_license_name(self.license_input, self.license_url_input) or None
+
+		self.license_input = self.license or ""
+
+		# The URL was only ever an instruction for creating a license. Once one
+		# is resolved, hold it to the URL that license actually carries, so it
+		# never lingers as a request that was not honoured.
+		self.license_url_input = (
+			frappe.db.get_value("License", self.license, "url") if self.license else ""
+		) or ""
 
 	def validate_category_approved(self):
 		"""Block publishing into a category an admin has not approved yet.
@@ -704,14 +639,26 @@ class Resource(WebsiteGenerator):
 		# ordinary edits, and this breadcrumb is the whole of what tells a
 		# visitor where in the tree they are.
 		context.category_path = get_category_path(self.category) if self.category else []
+		# Covers the breadcrumb, the icon placeholder and the Similar Resources
+		# cards, all of which are drawn in their category's colour.
+		context.category_colors_css = get_category_color_css()
 
 		context.is_logged_in = frappe.session.user != "Guest"
 		context.can_edit = context.is_logged_in and self.has_permission("write")
 		context.edit_url = f"/submit-resource/{self.name}"
 		context.badges = get_repo_badges(self.source_code_repository)
 		context.recommended = self.recommended
-		context.specs = self.get_detail_specs()
-		context.license_is_open = is_open_license(self.license)
+		context.website_label = get_display_host(self.website)
+
+		# A pending licence is a request nobody has checked, so it stays off the
+		# public listing exactly as a pending tag does.
+		licence = (
+			frappe.db.get_value("License", self.license, ["name", "url", "status"], as_dict=True)
+			if self.license
+			else None
+		)
+		context.license_name = licence.name if licence and licence.status == "Approved" else ""
+		context.license_url = licence.url if licence and licence.status == "Approved" else ""
 
 		from_category = frappe.form_dict.get("from_category")
 		context.back_url = f"/resources?category={quote(from_category)}" if from_category else "/resources"
@@ -734,47 +681,6 @@ class Resource(WebsiteGenerator):
 		# approval does not look like it was thrown away.
 		context.my_review = get_user_review(self.name)
 		context.login_url = f"/login?redirect-to={quote('/' + (self.route or ''))}"
-
-	def get_detail_specs(self):
-		"""Label/value rows for the specification block on a listing page.
-
-		Only what is actually filled in. A row carries either a single `value`,
-		optionally linked, or a list of `values` the template draws as chips.
-		Everything unset is left out rather than rendered blank, so a sparse
-		resource shows a short block instead of a table of dashes.
-		"""
-		rows = []
-
-		if self.license:
-			rows.append(
-				{
-					"label": _("License"),
-					"value": self.license,
-					"url": self.license_url,
-					"is_license": True,
-				}
-			)
-
-		formats = split_multi(self.book_formats) or split_multi(self.music_formats)
-		if formats:
-			rows.append({"label": _("Formats"), "chips": formats})
-
-		styles = split_multi(self.music_styles)
-		if styles:
-			rows.append({"label": _("Styles"), "chips": styles})
-
-		languages = split_multi(self.languages)
-		if languages:
-			rows.append({"label": _("Languages"), "chips": languages})
-
-		titles = cint(self.title_count)
-		tracks = cint(self.track_count)
-		if titles:
-			rows.append({"label": _("Titles"), "value": f"{titles:,}"})
-		elif tracks:
-			rows.append({"label": _("Tracks"), "value": f"{tracks:,}"})
-
-		return rows
 
 	def get_approved_tags(self):
 		"""This resource's tags that an admin has approved.
@@ -853,7 +759,7 @@ class Resource(WebsiteGenerator):
 			"recommended",
 			"average_rating",
 			"rating_count",
-			*CARD_FACT_FIELDS,
+			"license",
 		]
 
 		matches = frappe.get_all(
@@ -869,13 +775,15 @@ class Resource(WebsiteGenerator):
 		matches = matches[:limit]
 
 		tags_by_resource = get_tags_by_resource([r.name for r in matches])
+		approved_licenses = get_approved_license_names()
 
 		for r in matches:
+			if r.license not in approved_licenses:
+				r["license"] = None
 			r["tags"] = [
 				{"name": t, "url": f"/resources?tag={quote(t)}&recommended=0"}
 				for t in tags_by_resource.get(r.name, [])
 			]
-			r["facts"] = build_card_facts(r)
 
 		return matches
 

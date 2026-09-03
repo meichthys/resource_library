@@ -10,7 +10,7 @@
    "label": "Resources Added Over Time"
   }
  ],
- "content": "[{\"id\":\"rlCardTotalResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Resources\",\"col\":4}},{\"id\":\"rlCardPublished\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Published Resources\",\"col\":4}},{\"id\":\"rlCardPendingResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Resources\",\"col\":4}},{\"id\":\"rlCardCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Categories\",\"col\":6}},{\"id\":\"rlCardPendingCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Categories\",\"col\":6}},{\"id\":\"rlCardTotalTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Tags\",\"col\":6}},{\"id\":\"rlCardPendingTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Tags\",\"col\":6}},{\"id\":\"rlCardTotalReviews\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Reviews\",\"col\":6}},{\"id\":\"rlCardPendingReviews\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Reviews\",\"col\":6}},{\"id\":\"rlSpacer0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlChartByCategory\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources by Category\",\"col\":6}},{\"id\":\"rlChartOverTime\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources Added Over Time\",\"col\":6}},{\"id\":\"rlSpacer2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlShortcutWebsite\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Website\",\"col\":4}}]",
+ "content": "[{\"id\":\"rlCardTotalResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Resources\",\"col\":4}},{\"id\":\"rlCardPublished\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Published Resources\",\"col\":4}},{\"id\":\"rlCardPendingResources\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Resources\",\"col\":4}},{\"id\":\"rlCardCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Categories\",\"col\":6}},{\"id\":\"rlCardPendingCategories\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Categories\",\"col\":6}},{\"id\":\"rlCardTotalTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Tags\",\"col\":6}},{\"id\":\"rlCardPendingTags\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Tags\",\"col\":6}},{\"id\":\"rlCardTotalLicenses\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Licenses\",\"col\":6}},{\"id\":\"rlCardPendingLicenses\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Licenses\",\"col\":6}},{\"id\":\"rlCardTotalReviews\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Total Reviews\",\"col\":6}},{\"id\":\"rlCardPendingReviews\",\"type\":\"number_card\",\"data\":{\"number_card_name\":\"Pending Reviews\",\"col\":6}},{\"id\":\"rlSpacer0\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlChartByCategory\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources by Category\",\"col\":6}},{\"id\":\"rlChartOverTime\",\"type\":\"chart\",\"data\":{\"chart_name\":\"Resources Added Over Time\",\"col\":6}},{\"id\":\"rlSpacer2\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"rlShortcutWebsite\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Website\",\"col\":4}}]",
  "creation": "2026-08-26 18:34:44.212142",
  "custom_blocks": [],
  "docstatus": 0,
@@ -22,7 +22,7 @@
  "is_hidden": 0,
  "label": "Resource Library",
  "links": [],
- "modified": "2026-09-01 00:00:00.000000",
+ "modified": "2026-09-03 21:00:00.000000",
  "modified_by": "Administrator",
  "module": "Resource Library",
  "name": "Resource Library",
@@ -54,6 +54,14 @@
   {
    "label": "Pending Tags",
    "number_card_name": "Pending Tags"
+  },
+  {
+   "label": "Total Licenses",
+   "number_card_name": "Total Licenses"
+  },
+  {
+   "label": "Pending Licenses",
+   "number_card_name": "Pending Licenses"
   },
   {
    "label": "Total Reviews",

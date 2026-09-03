@@ -1,4 +1,4 @@
-/* ../../../../tmp/tmp-1168240-S8rn3gJHvI8T/resource_library/resource_library/public/css/resource_library.bundle.css */
+/* ../../../../tmp/tmp-1956883-6pzGpgB5Ge6U/resource_library/resource_library/public/css/resource_library.bundle.css */
 :root {
   --rl-grad: linear-gradient(135deg, #5b21b6 0%, #1d4ed8 45%, #0d9488 100%);
   --rl-text: #ffffff;
@@ -345,8 +345,7 @@ label,
 .rl-view-mode .ql-toolbar {
   display: none;
 }
-.rl-tag-picker .table-multiselect,
-.rl-pill-picker .table-multiselect {
+.rl-tag-picker .table-multiselect {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -358,14 +357,12 @@ label,
   border: 1px solid var(--rl-glass-border);
   border-radius: 8px;
 }
-.rl-tag-picker .awesomplete,
-.rl-pill-picker .awesomplete {
+.rl-tag-picker .awesomplete {
   position: relative;
   flex: 1 1 140px;
   min-width: 140px;
 }
-.rl-tag-picker .awesomplete > input,
-.rl-pill-picker .awesomplete > input {
+.rl-tag-picker .awesomplete > input {
   width: 100%;
   min-height: 24px;
   padding: 2px 4px;
@@ -375,16 +372,13 @@ label,
   background: transparent;
   color: var(--rl-text);
 }
-.rl-tag-picker .awesomplete > input::-moz-placeholder,
-.rl-pill-picker .awesomplete > input::-moz-placeholder {
+.rl-tag-picker .awesomplete > input::-moz-placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
-.rl-tag-picker .awesomplete > input::placeholder,
-.rl-pill-picker .awesomplete > input::placeholder {
+.rl-tag-picker .awesomplete > input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
-.rl-tag-picker .data-pill,
-.rl-pill-picker .data-pill {
+.rl-tag-picker .data-pill {
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -397,29 +391,24 @@ label,
   line-height: 1.5;
   white-space: nowrap;
 }
-.rl-tag-picker .data-pill .btn-remove,
-.rl-pill-picker .data-pill .btn-remove {
+.rl-tag-picker .data-pill .btn-remove {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
   opacity: 0.65;
 }
-.rl-tag-picker .data-pill .btn-remove:hover,
-.rl-pill-picker .data-pill .btn-remove:hover {
+.rl-tag-picker .data-pill .btn-remove:hover {
   opacity: 1;
 }
-.rl-tag-picker .data-pill svg,
-.rl-pill-picker .data-pill svg {
+.rl-tag-picker .data-pill svg {
   width: 10px;
   height: 10px;
 }
-.rl-tag-picker .awesomplete > ul,
-.rl-pill-picker .awesomplete > ul,
-.rl-category-picker .awesomplete > ul {
+.rl-tag-picker .awesomplete > ul {
   position: absolute;
   z-index: 20;
-  right: 0;
   left: 0;
+  right: 0;
   margin-top: 4px;
   padding: 4px;
   list-style: none;
@@ -430,31 +419,20 @@ label,
   max-height: 220px;
   overflow-y: auto;
 }
-.rl-tag-picker .awesomplete > ul[hidden],
-.rl-pill-picker .awesomplete > ul[hidden],
-.rl-category-picker .awesomplete > ul[hidden] {
+.rl-tag-picker .awesomplete > ul[hidden] {
   display: none;
 }
-.rl-tag-picker .awesomplete > ul > li,
-.rl-pill-picker .awesomplete > ul > li,
-.rl-category-picker .awesomplete > ul > li {
+.rl-tag-picker .awesomplete > ul > li {
   padding: 5px 8px;
   border-radius: 6px;
   color: var(--rl-text);
   font-size: 0.82rem;
   cursor: pointer;
 }
-.rl-tag-picker .awesomplete > ul > li:hover,
-.rl-pill-picker .awesomplete > ul > li:hover,
-.rl-tag-picker .awesomplete > ul > li[aria-selected=true],
-.rl-pill-picker .awesomplete > ul > li[aria-selected=true],
-.rl-category-picker .awesomplete > ul > li:hover,
-.rl-category-picker .awesomplete > ul > li[aria-selected=true] {
+.rl-tag-picker .awesomplete > ul > li:hover {
   background: var(--rl-glass-bg-strong);
 }
-.rl-tag-picker .awesomplete mark,
-.rl-pill-picker .awesomplete mark,
-.rl-category-picker .awesomplete mark {
+.rl-tag-picker .awesomplete mark {
   background: transparent;
   color: inherit;
   font-weight: 700;
@@ -486,7 +464,7 @@ label,
   justify-content: center;
   width: 15px;
   height: 15px;
-  margin-left: 0.35rem;
+  margin-right: 0.35rem;
   vertical-align: middle;
   border-radius: 50%;
   background: rgba(212, 169, 92, 0.92);
@@ -519,14 +497,14 @@ label,
 .recommended-banner {
   position: absolute;
   top: 0;
-  right: 50%;
-  transform: translateX(50%);
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 0.28rem;
   padding: 0.22rem 0.7rem 0.26rem;
   border-radius: 0 0 8px 8px;
-  background: linear-gradient(-135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
+  background: linear-gradient(135deg, rgba(212, 169, 92, 0.92), rgba(184, 144, 74, 0.92));
   color: #2e1f08;
   font-size: 0.62rem;
   font-weight: 700;
@@ -543,7 +521,7 @@ label,
 .rating-badge {
   position: absolute;
   top: 0.75rem;
-  left: 0.75rem;
+  right: 0.75rem;
   display: flex;
   align-items: center;
   gap: 0.3rem;
@@ -583,7 +561,7 @@ label,
 .star-row-full {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   width: var(--star-fill, 0%);
   overflow: hidden;
   color: #fbbf24;
@@ -626,6 +604,7 @@ label,
   object-fit: cover;
 }
 .card-icon-placeholder {
+  background: var(--cat-color, #3f3f46);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -639,6 +618,7 @@ label,
 }
 .card-cat {
   display: inline-block;
+  background: var(--cat-color, #3f3f46);
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 0.7rem;
@@ -647,7 +627,7 @@ label,
   white-space: nowrap;
 }
 .card-title {
-  padding-left: 3.25rem;
+  padding-right: 3.25rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--rl-text, #f5f5f5);
@@ -662,15 +642,6 @@ label,
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-.card-facts {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-top: 0.55rem;
-  font-size: 0.68rem;
-  color: var(--rl-text-muted, rgba(245, 245, 245, 0.62));
 }
 .card-license-row {
   display: flex;
@@ -698,16 +669,6 @@ label,
   height: 10px;
   flex-shrink: 0;
   opacity: 0.8;
-}
-.card-formats,
-.card-count {
-  white-space: nowrap;
-}
-.card-count {
-  font-variant-numeric: tabular-nums;
-}
-.card-facts-sep {
-  color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
 }
 .card-tags {
   display: flex;
@@ -739,4 +700,4 @@ label,
   width: 0.75em;
   height: 0.75em;
 }
-/*# sourceMappingURL=resource_library.bundle.EB2CJFEN.css.map */
+/*# sourceMappingURL=resource_library.bundle.3AVM6MAW.css.map */

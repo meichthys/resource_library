@@ -2,6 +2,7 @@
 {% from "templates/includes/resource_card.html" import resource_card %}
 
 {% block page_content %}
+{% include "templates/includes/category_colors.html" %}
 <div class="resources-page">
 
 	<!-- Header -->
@@ -61,7 +62,7 @@
 				and the select sits transparently over it, which keeps the native
 				control and its mobile picker intact.
 			#}
-			<div class="select-wrap filter-tip" data-tip="{{ filter_tip }}">
+			<div class="select-wrap filter-tip {% if filter_active %}is-active{% endif %}" data-tip="{{ filter_tip }}">
 				<span class="select-display" aria-hidden="true">Filter: {{ filter_label }}</span>
 				<select class="sort-select" aria-label="Filter resources"
 					onchange="if (this.value) window.location.href = this.value;">
@@ -104,7 +105,7 @@
 				<ul class="tree-branch">
 					{% for node in category_tree recursive %}
 					<li class="tree-node">
-						<a href="{{ node.url }}"
+						<a href="{{ node.url }}" data-category="{{ node.name }}"
 							class="tree-link {% if node.name == selected_category %}active{% endif %}">
 							<span class="tree-label">{{ node.label }}</span>
 							<span class="tree-count">{{ node.count }}</span>
@@ -219,6 +220,22 @@
 	color: var(--rl-text, #f5f5f5);
 	text-decoration: none;
 	transition: background 0.15s;
+}
+
+/*
+ * The branch a node belongs to, as a swatch. The colour cannot go on the label
+ * itself: these are dark shades on a dark panel, chosen to carry white text on
+ * a chip, so as text they would be the one thing here that cannot be read. The
+ * inset ring keeps the darkest roots off the panel background.
+ */
+.tree-link[data-category]::before {
+	content: "";
+	width: 0.62rem;
+	height: 0.62rem;
+	flex-shrink: 0;
+	border-radius: 3px;
+	background: var(--cat-color, rgba(255, 255, 255, 0.25));
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
 }
 
 .tree-link svg {
@@ -448,7 +465,16 @@
 	transform: translateY(0);
 }
 
+/*
+ * Above the select, which is laid over this span to keep the native control and
+ * its mobile picker: while the select's own ground is transparent the text below
+ * shows through, but the moment a state gives the select a ground of its own it
+ * would paint over the label. Still click-through, so the select underneath
+ * takes the interaction.
+ */
 .select-display {
+	position: relative;
+	z-index: 1;
 	box-sizing: border-box;
 	padding: 0.35rem 2.25rem 0.35rem 0.9rem;
 	border: 1px solid transparent;
@@ -488,6 +514,22 @@
 
 .sort-select:hover {
 	border-color: var(--rl-border-strong, rgba(255, 255, 255, 0.28));
+}
+
+/*
+ * A filter that is actually holding resources back wears the white ground an
+ * active category pill wears, so the controls that can shorten a listing all
+ * say so the same way. The chevron is redrawn dark: the one above is stroked in
+ * the page's own text colour, which on this ground would disappear.
+ */
+.select-wrap.is-active .sort-select {
+	background-color: var(--rl-text, #f5f5f5);
+	border-color: var(--rl-text, #f5f5f5);
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230a0a0a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+.select-wrap.is-active .select-display {
+	color: var(--rl-bg, #0a0a0a);
 }
 
 .sort-select option {

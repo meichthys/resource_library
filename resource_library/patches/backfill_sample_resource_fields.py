@@ -6,114 +6,53 @@ import frappe
 # Licensing and format details for the resources this site shipped with.
 #
 # Each value below was checked against the resource's own copyright or
-# permissions page, not inferred from how freely it gives things away. That
-# distinction matters more here than anywhere: several of these ministries
-# publish everything at no cost while explicitly forbidding redistribution,
-# which is "Free with conditions", not open. Monergism and Desiring God are both
-# that case, and both would read as Public Domain to anyone going by feel.
+# permissions page, not inferred from how freely it gives things away. Several
+# of these ministries publish everything at no cost while explicitly forbidding
+# redistribution, and would read as Public Domain to anyone going by feel.
+# Bespoke permissions like those are not a license, so those resources are left
+# out here entirely rather than filed under a catch-all: a blank says the site
+# has no terms to point at, which is the truth of it.
 #
 # Counts are only set where the resource states one itself. Anything unknown is
 # left out rather than estimated, since a card renders nothing for a blank.
 SAMPLE_FIELDS = {
 	"AndBible": {
 		"license": "GPL-3.0",
-		"license_url": "https://github.com/AndBible/and-bible/blob/master/LICENSE",
-		"languages": "English, and Bible texts in hundreds of languages",
 	},
 	"Berean Standard Bible": {
 		"license": "CC0",
-		"license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
-		"languages": "English",
 		"download_url": "https://berean.bible/downloads.htm",
-	},
-	"Bible Gateway": {
-		"license": "All rights reserved",
-		"languages": "More than 70 languages",
 	},
 	"Bibledit": {
 		"license": "GPL-3.0",
-		"license_url": "https://github.com/bibledit/cloud/blob/master/COPYING",
-		"languages": "English",
-	},
-	"Blue Letter Bible": {
-		"license": "All rights reserved",
-		"languages": "English",
 	},
 	"Christian Classics Ethereal Library": {
 		"license": "Public Domain",
-		"license_url": "https://www.ccel.org/copyright",
-		"languages": "English, Latin, Greek",
 		"download_url": "https://www.ccel.org/index/format",
-		"book_formats": "EPUB, PDF, HTML, Plain text, MOBI/Kindle",
-		# The count of ThML source files, which is one per work in the library
-		"title_count": 1327,
-	},
-	"Desiring God": {
-		# Free of charge, and freely quotable, but reproducing a whole work
-		# needs written permission. See the permissions page.
-		"license": "Free with conditions",
-		"license_url": "https://www.desiringgod.org/permissions",
-		"languages": "English, with selected translations",
-		"book_formats": "EPUB, PDF, MOBI/Kindle",
 	},
 	"eBible.org": {
 		"license": "Public Domain",
-		"license_url": "https://ebible.org/publicdomain.htm",
-		"languages": "More than 1,000 languages",
 		"download_url": "https://ebible.org/download.php",
-	},
-	"Faith Comes By Hearing": {
-		"license": "Free with conditions",
-		"languages": "More than 1,000 languages",
-	},
-	"Free Bible Commentary": {
-		# Redistribution is allowed, but only at no cost and with attribution,
-		# which stops short of an open license.
-		"license": "Free with conditions",
-		"license_url": "https://www.freebiblecommentary.org/",
-		"languages": "English, with translations in many languages",
 	},
 	"Grace Gems": {
 		"license": "Public Domain",
-		"languages": "English",
-		"book_formats": "HTML, Plain text",
-	},
-	"Grace to You": {
-		"license": "Free with conditions",
-		"license_url": "https://www.gty.org/about#copyright",
-		"languages": "English, Spanish",
 	},
 	"Monergism": {
-		# The underlying texts are largely public domain, but Monergism's own
-		# editions are copyrighted and may not be redistributed.
-		"license": "Free with conditions",
-		"license_url": "https://www.monergism.com/monergism-copyright-permissions",
-		"languages": "English",
+		# No license recorded: the underlying texts are largely public domain,
+		# but Monergism's own editions are copyrighted and may not be
+		# redistributed.
 		"download_url": "https://www.monergism.com/blog/download-entire-monergism-ebook-library-1063-ebooks",
-		"book_formats": "EPUB, PDF, MOBI/Kindle",
-		"title_count": 1063,
 	},
 	"Open English Bible": {
 		"license": "CC0",
-		"license_url": "https://openenglishbible.org/blog/move-to-cc0/",
-		"languages": "English",
 		"download_url": "https://openenglishbible.org/download/",
-	},
-	"STEP Bible": {
-		"license": "Other open license",
-		"license_url": "https://github.com/STEPBible/STEPBible-Data",
-		"languages": "More than 20 interface languages",
 	},
 	"unfoldingWord": {
 		"license": "CC BY-SA",
-		"license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
-		"languages": "English, and gateway languages worldwide",
 		"download_url": "https://www.unfoldingword.org/for-translators/content",
 	},
 	"Xiphos": {
 		"license": "GPL-2.0",
-		"license_url": "https://github.com/crosswire/xiphos/blob/master/COPYING",
-		"languages": "English",
 	},
 }
 
@@ -139,10 +78,6 @@ SAMPLE_MUSIC_RESOURCE = {
 	"website": "http://openhymnal.org",
 	"download_url": "http://openhymnal.org",
 	"license": "Public Domain",
-	"license_url": "http://openhymnal.org/copying.html",
-	"languages": "English",
-	"music_formats": "Sheet music, Notation source, MIDI, Lyrics",
-	"music_styles": "Hymns",
 	"published": 1,
 }
 

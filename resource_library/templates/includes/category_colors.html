@@ -1,0 +1,15 @@
+{#
+	Every category's colour, as a custom property keyed off data-category.
+
+	One rule per category rather than an inline style on every chip: the colour
+	is then set once and inherited, so an element only has to say which category
+	it is about and anything inside it can draw in that colour. Rendered as-is
+	because the rules are built in category_colors.py, which escapes each name
+	for the selector it goes into; escaping again here would be HTML escaping
+	inside a <style>, where entities are not decoded.
+#}
+{% if category_colors_css %}
+<style>
+{{ category_colors_css | safe }}
+</style>
+{% endif %}

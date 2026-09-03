@@ -52,25 +52,6 @@
 
 	<div class="card-body">
 		<div class="card-desc">{{ r.description | striptags | truncate(110) }}</div>
-		{#
-			Formats and catalogue size, only for resources that record either.
-			The card already carries a banner, a rating, a category pill and a
-			tag row, so this stays to a single line; the rest of the format
-			detail lives on the listing page.
-		#}
-		{% if r.facts and (r.facts.formats or r.facts.count_label) %}
-		<div class="card-facts">
-			{% if r.facts.formats %}
-			<span class="card-formats">
-				{{ r.facts.formats | join(" · ") }}{% if r.facts.formats_extra %} +{{ r.facts.formats_extra }}{% endif %}
-			</span>
-			{% endif %}
-			{% if r.facts.count_label %}
-			{% if r.facts.formats %}<span class="card-facts-sep">·</span>{% endif %}
-			<span class="card-count">{{ r.facts.count_label }}</span>
-			{% endif %}
-		</div>
-		{% endif %}
 		{% if r.tags %}
 		<div class="card-tags">
 			{% for tag in r.tags %}
@@ -79,19 +60,13 @@
 		</div>
 		{% endif %}
 		{#
-			The licence closes the card, centred under a hairline. Deliberately
-			uncoloured: on a grid of cards a row of green and amber pills reads
-			as a status alert, and the licence is context rather than a warning.
-			The padlock still opens or closes with the terms, so the open/closed
-			distinction survives losing the colour.
+			The licence closes the card, centred under a hairline: context to carry
+			with the resource rather than something to act on, so it is set in the
+			same muted tone as the description.
 		#}
-		{% if r.facts and r.facts.license %}
+		{% if r.license %}
 		<div class="card-license-row">
-			<span class="card-license"
-				title="{% if r.facts.license_is_open %}Free to adapt, translate and redistribute{% else %}Free of charge, but restricted{% endif %}">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/>{% if r.facts.license_is_open %}<path d="M8 11V7a4 4 0 0 1 7.5-2"/>{% else %}<path d="M8 11V8a4 4 0 0 1 8 0v3"/>{% endif %}</svg>
-				{{ r.facts.license }}
-			</span>
+			<span class="card-license">{{ r.license }}</span>
 		</div>
 		{% endif %}
 	</div>

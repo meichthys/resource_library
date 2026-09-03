@@ -3,10 +3,10 @@ from urllib.parse import quote
 
 import frappe
 
+from resource_library.category_colors import get_category_color_css
 from resource_library.resource_library.doctype.resource.resource import (
-	CARD_FACT_FIELDS,
-	build_card_facts,
 	get_approved_category_names,
+	get_approved_license_names,
 	get_approved_tag_names,
 	get_category_path,
 	get_descendant_categories,
@@ -174,6 +174,7 @@ def get_context(context):
 	# Resolve the tag before url() is defined: the closure binds selected_tag as
 	# a default argument, so a later reassignment would not reach the links.
 	approved_tags = get_approved_tag_names()
+	approved_licenses = get_approved_license_names()
 	selected_tag = frappe.form_dict.get("tag", "")
 	if selected_tag not in approved_tags:
 		# an unapproved or unknown tag is not a public filter
@@ -267,7 +268,7 @@ def get_context(context):
 		"recommended",
 		"average_rating",
 		"rating_count",
-		*CARD_FACT_FIELDS,
+		"license",
 	]
 
 	# Ties on the average go to the resource more people agreed on, so a lone
@@ -280,9 +281,13 @@ def get_context(context):
 
 	for r in resources:
 		r["tags"] = [{"name": t, "url": url(tag=t)} for t in tags_by_resource.get(r.name, [])]
-		r["facts"] = build_card_facts(r)
+		# A licence a submitter requested stays off the grid until approved,
+		# the same rule the tags above follow.
+		if r.license not in approved_licenses:
+			r["license"] = None
 
 	context.resources = resources
+	context.category_colors_css = get_category_color_css()
 	context.category_tree = build_category_tree(branch_counts, url)
 	context.category_tree_total = sum(branch_counts.values())
 	context.path_pills = path_pills
@@ -317,6 +322,10 @@ def get_context(context):
 	selected_filter = next(option for option in context.filter_options if option["selected"])
 	context.filter_label = selected_filter["label"]
 	context.filter_tip = selected_filter["tip"]
+	# Anything but All is holding resources back from the listing, which is what
+	# the control's white ground says. Sort has no equivalent: it reorders a
+	# listing without taking anything out of it.
+	context.filter_active = recommended_only or top_rated
 	context.empty_message = build_empty_message(selected_category, selected_tag, recommended_only, top_rated)
 	context.no_breadcrumbs = True
 	context.title = "Resources"

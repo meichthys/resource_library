@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../apps/resource_library/resource_library/public/js/resource_card.bundle.js"],
+  "sourcesContent": ["/*\n * Behaviour for the shared resource card (templates/includes/resource_card.html).\n * Loaded on every public page so the main listing and the Similar Resources\n * block on the detail page behave identically.\n */\nfrappe.ready(function () {\n\t/* Tag chips sit inside the card's <a>, so a nested link would be invalid\n\t   markup. Navigate manually and stop the card link from also firing. */\n\tdocument.querySelectorAll(\".card-tag\").forEach(function (el) {\n\t\tel.addEventListener(\"click\", function (e) {\n\t\t\te.preventDefault();\n\t\t\te.stopPropagation();\n\t\t\tif (el.dataset.url) window.location.href = el.dataset.url;\n\t\t});\n\t});\n});\n"],
+  "mappings": ";;AAKA,SAAO,MAAM,WAAY;AAGxB,aAAS,iBAAiB,WAAW,EAAE,QAAQ,SAAU,IAAI;AAC5D,SAAG,iBAAiB,SAAS,SAAU,GAAG;AACzC,UAAE,eAAe;AACjB,UAAE,gBAAgB;AAClB,YAAI,GAAG,QAAQ;AAAK,iBAAO,SAAS,OAAO,GAAG,QAAQ;AAAA,MACvD,CAAC;AAAA,IACF,CAAC;AAAA,EACF,CAAC;",
+  "names": []
+}

@@ -15,7 +15,6 @@ frappe.ui.form.on("Resource", {
 	},
 
 	refresh(frm) {
-		setup_multi_pickers(frm);
 		toggle_category_sections(frm);
 		warn_if_category_pending(frm);
 		add_transfer_ownership_button(frm);
@@ -139,12 +138,11 @@ function warn_if_category_pending(frm) {
 }
 
 /**
- * Which conditional sections exist, what each contains, and the fixed
- * vocabularies behind the pill pickers.
+ * Which conditional sections exist and what each contains.
  *
- * Fetched once and cached for the page: the shapes are code constants on the
- * server, so they cannot change between two calls in the same session, and both
- * the section toggle and the pickers need them on every refresh.
+ * Fetched once and cached for the page: the shape is a code constant on the
+ * server, so it cannot change between two calls in the same session, and the
+ * section toggle needs it on every refresh.
  */
 let field_options = null;
 let field_options_pending = [];
@@ -165,7 +163,7 @@ function with_field_options(callback) {
 	frappe.call({
 		method: "resource_library.resource_library.doctype.resource.resource.get_field_options",
 		callback(r) {
-			field_options = r.message || { multi_value: {}, sections: {} };
+			field_options = r.message || { sections: {} };
 			let waiting = field_options_pending;
 			field_options_pending = [];
 			waiting.forEach((fn) => fn(field_options));
@@ -210,107 +208,4 @@ function toggle_category_sections(frm) {
 			},
 		});
 	});
-}
-
-/**
- * Drive the comma separated multi-value fields with pill pickers.
- *
- * The values are a fixed vocabulary rather than records an admin curates, so
- * there is no doctype to hang a Table MultiSelect off, and the same comma
- * separated storage is what the public submission form has to write anyway.
- */
-function setup_multi_pickers(frm) {
-	with_field_options(function (options) {
-		let vocabularies = options.multi_value || {};
-		Object.keys(vocabularies).forEach(function (fieldname) {
-			attach_pill_picker(frm, fieldname, vocabularies[fieldname]);
-		});
-	});
-}
-
-/**
- * The raw input is hidden through a stylesheet rather than jQuery, because a
- * control redraws itself whenever its value is set and would show the input
- * again halfway through editing.
- */
-function ensure_picker_styles() {
-	if (document.getElementById("rl-picker-styles")) {
-		return;
-	}
-
-	let style = document.createElement("style");
-	style.id = "rl-picker-styles";
-	style.textContent =
-		".rl-pill-driven > .control-input-wrapper { display: none !important; }" +
-		".rl-pills .form-control { min-height: 0; }";
-	document.head.appendChild(style);
-}
-
-function attach_pill_picker(frm, fieldname, choices) {
-	let field = frm.get_field(fieldname);
-	if (!field || !field.$wrapper) {
-		return;
-	}
-
-	let current = split_values(frm.doc[fieldname]);
-
-	// A picker built on an earlier refresh is still live, so re-seed it rather
-	// than stacking a second control underneath the first. The DOM check
-	// matters as well as the handle: a re-rendered form leaves the old control
-	// object attached to a wrapper that is no longer on the page.
-	if (field.rl_picker && field.$wrapper.find(".rl-pills").length) {
-		field.rl_picker.set_value(current);
-		return;
-	}
-
-	ensure_picker_styles();
-	field.$wrapper.addClass("rl-pill-driven");
-
-	// After the input it replaces, so the field's description stays underneath
-	let $host = $('<div class="rl-pills"></div>').insertAfter(
-		field.$wrapper.find(".control-input-wrapper")
-	);
-
-	let control = frappe.ui.form.make_control({
-		df: {
-			fieldtype: "MultiSelectPills",
-			fieldname: `rl_${fieldname}_picker`,
-			placeholder: __("Select one or more"),
-			get_data: function () {
-				return choices.map((choice) => ({ value: choice, label: choice }));
-			},
-			change: function () {
-				commit();
-			},
-		},
-		parent: $host,
-		render_input: true,
-		only_input: true,
-	});
-
-	function commit() {
-		let rows = control.get_value();
-		rows = Array.isArray(rows) ? rows.filter(Boolean) : [];
-		frm.set_value(fieldname, rows.join(", "));
-	}
-
-	// Removing a pill mutates the control's rows directly, so re-read after the
-	// click has settled rather than trusting the change event alone.
-	$host.on("click", ".btn-remove", function () {
-		setTimeout(commit, 0);
-	});
-
-	control.$input.on("awesomplete-selectcomplete", function () {
-		setTimeout(commit, 0);
-	});
-
-	field.rl_picker = control;
-	control.set_value(current);
-}
-
-function split_values(raw) {
-	return String(raw || "")
-		.split(",")
-		.map((part) => part.trim())
-		.filter(Boolean);
 }
